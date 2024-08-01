@@ -2,26 +2,25 @@
 
 namespace App\Filament\Clusters\Companies\Resources;
 
-use Closure;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Office;
 use App\Models\Company;
-use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\Clusters\Companies;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Clusters\Companies\Resources\CompanyResource\Pages;
-use App\Filament\Clusters\Companies\Resources\CompanyResource\RelationManagers;
+use App\Filament\Clusters\Companies\Resources\OfficeResource\Pages;
+use App\Filament\Clusters\Companies\Resources\OfficeResource\RelationManagers;
 
-class CompanyResource extends Resource
+class OfficeResource extends Resource
 {
-    protected static ?string $model = Company::class;
+    protected static ?string $model = Office::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-library';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $cluster = Companies::class;
 
@@ -32,19 +31,19 @@ class CompanyResource extends Resource
                 Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\TextInput::make('name')
-                            ->afterStateUpdated(function (Set $set, $state) {
-                                $set('slug', Company::generateUniqueSlug($state));
-                            })
                             ->required()
-                            ->live(onBlur: true)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('slug')
                             ->required()
-                            ->readOnly()
-                            ->afterStateUpdated(function (Closure $set, $state) {
-                                $set('slug', Company::generateUniqueSlug($state));
-                            })
                             ->maxLength(255),
+                        Forms\Components\Select::make('company_id')
+                            ->label('Company')
+                            ->required()
+                            ->options(Company::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('description')
+                            ->columnSpanFull(),
                         Forms\Components\Toggle::make('is_active')
                             ->default(true)
                             ->required(),
@@ -59,11 +58,17 @@ class CompanyResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('company.name')
+                    ->badge()
+                    ->searchable()
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->sortable()
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
@@ -130,16 +135,16 @@ class CompanyResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\OfficesRelationManager::class,
+            //
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCompanies::route('/'),
-            'create' => Pages\CreateCompany::route('/create'),
-            'edit' => Pages\EditCompany::route('/{record}/edit'),
+            'index' => Pages\ListOffices::route('/'),
+            'create' => Pages\CreateOffice::route('/create'),
+            'edit' => Pages\EditOffice::route('/{record}/edit'),
         ];
     }
 }

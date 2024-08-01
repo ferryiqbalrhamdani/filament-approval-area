@@ -7,21 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Company extends Model
+class Office extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'company_id',
         'name',
         'slug',
+        'description',
         'is_active',
     ];
 
-    public function offices()
+    public function company()
     {
-        return $this->hasMany(Office::class, 'company_id');
+        return $this->belongsTo(Company::class);
     }
-
 
     public static function generateUniqueSlug(string $name): string
     {
