@@ -21,19 +21,4 @@ class Company extends Model
     {
         return $this->hasMany(Office::class, 'company_id');
     }
-
-
-    public static function generateUniqueSlug(string $name): string
-    {
-        $slug = Str::slug($name);
-        $originalSlug = $slug;
-        $counter = 1;
-
-        while (self::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $counter;
-            $counter++;
-        }
-
-        return $slug;
-    }
 }

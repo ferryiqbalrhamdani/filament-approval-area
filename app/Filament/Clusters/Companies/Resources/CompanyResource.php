@@ -32,18 +32,11 @@ class CompanyResource extends Resource
                 Forms\Components\Section::make()
                     ->schema([
                         Forms\Components\TextInput::make('name')
-                            ->afterStateUpdated(function (Set $set, $state) {
-                                $set('slug', Company::generateUniqueSlug($state));
-                            })
                             ->required()
                             ->live(onBlur: true)
                             ->maxLength(255),
                         Forms\Components\TextInput::make('slug')
                             ->required()
-                            ->readOnly()
-                            ->afterStateUpdated(function (Closure $set, $state) {
-                                $set('slug', Company::generateUniqueSlug($state));
-                            })
                             ->maxLength(255),
                         Forms\Components\Toggle::make('is_active')
                             ->default(true)
@@ -58,6 +51,10 @@ class CompanyResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('slug')
+                    ->sortable()
+                    ->badge()
                     ->searchable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->sortable()

@@ -129,6 +129,9 @@ class OfficeResource extends Resource
                     Tables\Actions\ForceDeleteBulkAction::make(),
                     Tables\Actions\RestoreBulkAction::make(),
                 ]),
+            ])
+            ->groups([
+                'company.name',
             ]);
     }
 
