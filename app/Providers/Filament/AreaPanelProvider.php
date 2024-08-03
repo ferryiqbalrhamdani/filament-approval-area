@@ -59,7 +59,8 @@ class AreaPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->plugin(
-                \Hasnayeen\Themes\ThemesPlugin::make()
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                // \Hasnayeen\Themes\ThemesPlugin::make(),
             );
     }
 }

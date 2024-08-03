@@ -66,7 +66,7 @@ class UserResource extends Resource
                                         GenderType::L->value => 'Laki-laki',
                                         GenderType::P->value => 'Perempuan',
                                     ])
-                                    ->default('L')
+                                    ->default('Laki-laki')
                                     ->required()
                                     ->columns(3)
                             ])->columns(3),
@@ -100,7 +100,13 @@ class UserResource extends Resource
                                         'magang' => 'Magang',
                                     ])
                                     ->searchable(),
-                            ])
+                                Forms\Components\Select::make('roles')
+                                    ->relationship('roles', 'name')
+                                    ->required()
+                                    ->multiple()
+                                    ->preload()
+                                    ->searchable()
+                            ])->columns(3),
                     ]),
             ]);
     }
