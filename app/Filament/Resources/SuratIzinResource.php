@@ -25,6 +25,9 @@ class SuratIzinResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationGroup = 'User';
+
+
     public static function form(Form $form): Form
     {
         return $form
@@ -117,7 +120,9 @@ class SuratIzinResource extends Resource
                     ->toggleable()
                     ->sortable()
                     ->time('H:i'),
-                ViewColumn::make('status')->view('tables.columns.status-surat-izin')
+                ViewColumn::make('suratIzinApprove.status')
+                    ->view('tables.columns.status-surat-izin')
+                    ->label('Status Satu')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
@@ -174,16 +179,13 @@ class SuratIzinResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\EditAction::make()
+                        ->visible(fn ($record) => $record->suratIzinApprove->status == 0),
                     Tables\Actions\ViewAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn ($record) => $record->suratIzinApprove->status == 0),
                 ])
                     ->tooltip('Actions'),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
             ])
             ->query(fn (SuratIzin $query) => $query->where('user_id', Auth::id()));
     }

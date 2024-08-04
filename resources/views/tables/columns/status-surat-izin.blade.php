@@ -8,6 +8,6 @@
     @elseif ($getState() === 2)
     Rejected
     @else
-    Not Yet
+    Pendding
     @endif
 </x-filament::badge>

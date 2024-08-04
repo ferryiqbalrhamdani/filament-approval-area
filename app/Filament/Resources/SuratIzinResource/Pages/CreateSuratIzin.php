@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SuratIzinResource\Pages;
 
 use App\Filament\Resources\SuratIzinResource;
+use App\Models\SuratIzinApprove;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
@@ -13,6 +14,16 @@ class CreateSuratIzin extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+
+        if (empty($data['sampai_tanggal'])) {
+            $data['sampai_tanggal'] = $data['tanggal_izin'];
+        }
+
+        if ($data['keperluan_izin'] == 'Izin Datang Terlambat') {
+            $data['jam_izin'] = '08:00';
+        }
+
+
         // Parsing waktu mulai dan selesai
         $jamMulai = Carbon::parse($data['jam_izin']);
         $sampaiJam = Carbon::parse($data['sampai_jam']);
@@ -51,6 +62,17 @@ class CreateSuratIzin extends CreateRecord
 
         $data['lama_izin'] = $lamaIzin . " Hari";
 
+
+
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        $suratIzin = $this->record;
+
+        SuratIzinApprove::create([
+            'surat_izin_id' => $suratIzin->id,
+        ]);
     }
 }

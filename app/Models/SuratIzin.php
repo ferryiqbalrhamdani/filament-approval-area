@@ -27,8 +27,22 @@ class SuratIzin extends Model
         'status_tiga',
     ];
 
+    public static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($suratIzin) {
+            $suratIzin->suratIzinApprove()->delete();
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function suratIzinApprove()
+    {
+        return $this->hasOne(SuratIzinApprove::class);
     }
 }
