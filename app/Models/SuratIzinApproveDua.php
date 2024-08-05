@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SuratIzinApprove extends Model
+class SuratIzinApproveDua extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'surat_izin_id',
+        'surat_izin_approve_id',
         'user_id',
         'status',
         'keterangan',
@@ -21,9 +22,9 @@ class SuratIzinApprove extends Model
         return $this->belongsTo(SuratIzin::class);
     }
 
-    public function suratIzinApproveDua()
+    public function suratIzinApprove()
     {
-        return $this->hasOne(SuratIzinApproveDua::class);
+        return $this->belongsTo(SuratIzinApprove::class);
     }
 
     public function user()

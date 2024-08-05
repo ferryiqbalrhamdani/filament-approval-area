@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
+use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -186,32 +187,26 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('resetPassword')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('primary')
+                    ->action(function (User $record, array $data): void {
+                        $record->update([
+                            'password' => Hash::make('password'),
+                        ]);
+                        Notification::make()
+                            ->title('User Password Berhasil Diubah')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation()
+                    ->visible(fn ($record) => $record->id != 1),
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\DeleteAction::make(),
                 ])
                     ->tooltip('Actions'),
-                Tables\Actions\Action::make('changeName')
-                    ->form([
-                        Forms\Components\TextArea::make('last_name')
-                            ->hiddenLabel()
-                            ->required()
-                            ->maxLength(255),
-                    ])
-                    ->color('danger')
-                    ->action(function (User $record, array $data): void {
-                        $record->update([
-                            'last_name' => $data['last_name'],
-                        ]);
-                        Notification::make()
-                            ->title('Name Changed')
-                            ->body('The last name has been successfully updated.')
-                            ->success()
-                            ->send();
-                    })
-                    ->requiresConfirmation()
-                    ->successNotificationTitle('User has been changed')
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

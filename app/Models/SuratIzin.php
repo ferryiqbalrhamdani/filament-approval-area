@@ -25,6 +25,7 @@ class SuratIzin extends Model
         'status',
         'status_dua',
         'status_tiga',
+        'company_id',
     ];
 
     public static function boot()
@@ -44,5 +45,10 @@ class SuratIzin extends Model
     public function suratIzinApprove()
     {
         return $this->hasOne(SuratIzinApprove::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

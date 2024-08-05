@@ -126,7 +126,9 @@ class SuratIzinResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('status_dua')->view('tables.columns.status-surat-izin')
+                ViewColumn::make('suratIzinApprove.suratIzinApproveDua.status')
+                    ->label('Status Dua')
+                    ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),

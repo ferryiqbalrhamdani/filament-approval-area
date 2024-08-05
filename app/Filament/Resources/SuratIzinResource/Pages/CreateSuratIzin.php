@@ -7,6 +7,7 @@ use App\Models\SuratIzinApprove;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Auth;
 
 class CreateSuratIzin extends CreateRecord
 {
@@ -14,6 +15,8 @@ class CreateSuratIzin extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+
+        $data['company_id'] = Auth::user()->company_id;
 
         if (empty($data['sampai_tanggal'])) {
             $data['sampai_tanggal'] = $data['tanggal_izin'];
