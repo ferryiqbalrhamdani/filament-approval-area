@@ -27,6 +27,8 @@ class SuratIzinResource extends Resource
 
     protected static ?string $navigationGroup = 'User';
 
+    protected static ?int $navigationSort = 0;
+
 
     public static function form(Form $form): Form
     {
@@ -48,7 +50,7 @@ class SuratIzinResource extends Resource
                             ]),
                         Forms\Components\Section::make()
                             ->schema([
-                                Forms\Components\Fieldset::make('Lama Izin')
+                                Forms\Components\Fieldset::make('Tanggal')
                                     ->schema([
                                         Forms\Components\DatePicker::make('tanggal_izin'),
                                         Forms\Components\DatePicker::make('sampai_tanggal'),
@@ -96,7 +98,7 @@ class SuratIzinResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('lama_izin')
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('tanggal_izin')
@@ -132,7 +134,9 @@ class SuratIzinResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('status_tiga')->view('tables.columns.status-surat-izin')
+                ViewColumn::make('suratIzinApprove.suratIzinApproveDua.suratIzinApproveTiga.status')
+                    ->label('Status Tiga')
+                    ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
@@ -149,31 +153,31 @@ class SuratIzinResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\Filter::make('created_at')
+                Tables\Filters\Filter::make('tanggal_izin')
                     ->form([
-                        Forms\Components\DatePicker::make('created_from')
+                        Forms\Components\DatePicker::make('izin_dari')
                             ->placeholder(fn ($state): string => 'Dec 18, ' . now()->subYear()->format('Y')),
-                        Forms\Components\DatePicker::make('created_until')
+                        Forms\Components\DatePicker::make('sampai_izin')
                             ->placeholder(fn ($state): string => now()->format('M d, Y')),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
-                                $data['created_from'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                                $data['izin_dari'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('tanggal_izin', '>=', $date),
                             )
                             ->when(
-                                $data['created_until'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                                $data['sampai_izin'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('tanggal_izin', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-                        if ($data['created_from'] ?? null) {
-                            $indicators['created_from'] = 'Order from ' . Carbon::parse($data['created_from'])->toFormattedDateString();
+                        if ($data['izin_dari'] ?? null) {
+                            $indicators['izin_dari'] = 'Tanggal Mulai: ' . Carbon::parse($data['izin_dari'])->toFormattedDateString();
                         }
-                        if ($data['created_until'] ?? null) {
-                            $indicators['created_until'] = 'Order until ' . Carbon::parse($data['created_until'])->toFormattedDateString();
+                        if ($data['sampai_izin'] ?? null) {
+                            $indicators['sampai_izin'] = 'Tanggal Akhir: ' . Carbon::parse($data['sampai_izin'])->toFormattedDateString();
                         }
 
                         return $indicators;

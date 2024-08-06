@@ -70,6 +70,12 @@ class CreateSuratIzin extends CreateRecord
         return $data;
     }
 
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
+
     protected function afterCreate(): void
     {
         $suratIzin = $this->record;
@@ -77,5 +83,7 @@ class CreateSuratIzin extends CreateRecord
         SuratIzinApprove::create([
             'surat_izin_id' => $suratIzin->id,
         ]);
+
+        $this->redirect($this->getRedirectUrl());
     }
 }

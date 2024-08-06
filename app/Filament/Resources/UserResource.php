@@ -29,6 +29,9 @@ class UserResource extends Resource
 
     protected static ?string $navigationGroup = 'Settings';
 
+    protected static ?int $navigationSort = 41;
+
+
     public static function form(Form $form): Form
     {
         return $form
@@ -102,7 +105,7 @@ class UserResource extends Resource
                                     ])
                                     ->searchable(),
                                 Forms\Components\Select::make('roles')
-                                    ->relationship('roles', 'name')
+                                    ->relationship('roles', 'name', fn (Builder $query) => $query->where('id', '>', 1)->orWhere('name', '!=', 'super_admin')->orderBy('name', 'asc'))
                                     ->required()
                                     ->multiple()
                                     ->preload()
@@ -170,6 +173,11 @@ class UserResource extends Resource
                     ->label('JK')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->badge()
+                    ->color('gray')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('status_karyawan')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -183,6 +191,7 @@ class UserResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
@@ -204,7 +213,10 @@ class UserResource extends Resource
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\ViewAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(function (User $record) {
+                            return $record->id !== 1 && !$record->hasRole('super_admin');
+                        }),
                 ])
                     ->tooltip('Actions'),
             ])

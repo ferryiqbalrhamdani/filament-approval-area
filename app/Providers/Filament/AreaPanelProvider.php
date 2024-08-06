@@ -64,9 +64,9 @@ class AreaPanelProvider extends PanelProvider
                     ->slug('my-profile')
                     ->setTitle('My Profile')
                     ->setNavigationLabel('My Profile')
-                    ->setNavigationGroup('Profile')
+                    ->setNavigationGroup('Settings')
                     ->setIcon('heroicon-o-user')
-                    ->setSort(10)
+                    ->setSort(42)
                     ->shouldShowEditProfileForm(false)
                     ->shouldShowDeleteAccountForm(false),
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),

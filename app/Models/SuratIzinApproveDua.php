@@ -31,4 +31,9 @@ class SuratIzinApproveDua extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function suratIzinApproveTiga()
+    {
+        return $this->hasOne(suratIzinApproveTiga::class);
+    }
 }

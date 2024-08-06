@@ -2,87 +2,88 @@
 
 namespace App\Filament\Resources;
 
-use Carbon\Carbon;
+use App\Filament\Resources\SuratIzinApproveTigaResource\Pages;
+use App\Filament\Resources\SuratIzinApproveTigaResource\RelationManagers;
+use App\Models\SuratIzinApproveTiga;
 use Filament\Forms;
-use Filament\Tables;
 use Filament\Forms\Form;
-use Filament\Tables\Table;
-use App\Models\SuratIzinApprove;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
+use Filament\Tables;
 use Filament\Tables\Columns\ViewColumn;
-use Filament\Notifications\Notification;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Enums\ActionsPosition;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\SuratIzinApproveResource\Pages;
-use App\Filament\Resources\SuratIzinApproveResource\RelationManagers;
 use Illuminate\Support\Facades\Auth;
 
-class SuratIzinApproveResource extends Resource
+class SuratIzinApproveTigaResource extends Resource
 {
-    protected static ?string $model = SuratIzinApprove::class;
+    protected static ?string $model = SuratIzinApproveTiga::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Approve Satu';
+    protected static ?string $navigationGroup = 'Approve Tiga';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 30;
 
 
 
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                //
-            ]);
+            ->schema([]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('suratIzin.user.first_name')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.first_name')
                     ->label('Nama User')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzin.keperluan_izin')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.company.slug')
+                    ->badge()
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.keperluan_izin')
                     ->label('Keperluan Izin')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzin.lama_izin')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.lama_izin')
                     ->label('Lama Izin')
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzin.tanggal_izin')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.tanggal_izin')
                     ->label('Tgl. Izin')
                     ->date()
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzin.sampai_tanggal')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.sampai_tanggal')
                     ->label('Sampai Tgl. Izin')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->date()
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzin.durasi_izin')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.durasi_izin')
                     ->label('Durasi Izin')
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzin.jam_izin')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.jam_izin')
                     ->label('Jam Izin')
                     ->toggleable()
                     ->sortable()
                     ->time('H:i'),
-                Tables\Columns\TextColumn::make('suratIzin.sampai_jam')
+                Tables\Columns\TextColumn::make('suratIzinApproveDua.suratIzinApprove.suratIzin.sampai_jam')
                     ->label('Sampai Jam')
                     ->toggleable()
                     ->sortable()
                     ->time('H:i'),
-                ViewColumn::make('status')
+                ViewColumn::make('suratIzinApproveDua.suratIzinApprove.status')
                     ->view('tables.columns.status-surat-izin')
                     ->label('Status Satu')
                     ->alignment(Alignment::Center)
@@ -94,7 +95,7 @@ class SuratIzinApproveResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('suratIzinApproveDua.suratIzinApproveTiga.status')
+                ViewColumn::make('status')
                     ->label('Status Tiga')
                     ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
@@ -103,6 +104,40 @@ class SuratIzinApproveResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                // Filter berdasarkan status
+                Tables\Filters\Filter::make('status')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->options([
+                                0 => 'Pending',
+                                1 => 'Approved',
+                                2 => 'Rejected',
+                            ])
+                            ->placeholder('Pilih Status'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        // Terapkan filter hanya jika 'status' diatur dan tidak kosong
+                        if (isset($data['status']) && $data['status'] !== '') {
+                            $query->where('status', $data['status']);
+                        }
+                        return $query;
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        // Jika 'status' tidak diatur atau kosong, kembalikan indikator kosong
+                        if (!isset($data['status']) || $data['status'] === '') {
+                            return [];
+                        }
+
+                        $statusLabels = [
+                            0 => 'Pending',
+                            1 => 'Approved',
+                            2 => 'Rejected',
+                        ];
+
+                        return ['Status: ' . $statusLabels[$data['status']]];
+                    }),
+
+                // Filter berdasarkan rentang tanggal izin
                 Tables\Filters\Filter::make('tanggal_izin')
                     ->form([
                         Forms\Components\DatePicker::make('start_date')
@@ -115,13 +150,13 @@ class SuratIzinApproveResource extends Resource
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when($data['start_date'], function ($query, $start) {
-                                $query->whereHas('suratIzin', function ($query) use ($start) {
-                                    $query->whereDate('tb_izin.tanggal_izin', '>=', $start);
+                                $query->whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin', function ($query) use ($start) {
+                                    $query->whereDate('tanggal_izin', '>=', $start);
                                 });
                             })
                             ->when($data['end_date'], function ($query, $end) {
-                                $query->whereHas('suratIzin', function ($query) use ($end) {
-                                    $query->whereDate('tb_izin.tanggal_izin', '<=', $end);
+                                $query->whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin', function ($query) use ($end) {
+                                    $query->whereDate('tanggal_izin', '<=', $end);
                                 });
                             });
                     })
@@ -129,16 +164,17 @@ class SuratIzinApproveResource extends Resource
                         $indicators = [];
 
                         if ($data['start_date'] ?? null) {
-                            $indicators['start_date'] = 'Tanggal Mulai: ' . Carbon::parse($data['start_date'])->toFormattedDateString();
+                            $indicators['start_date'] = 'Mulai dari: ' . $data['start_date'];
                         }
 
                         if ($data['end_date'] ?? null) {
-                            $indicators['end_date'] = 'Tanggal Akhir: ' . Carbon::parse($data['end_date'])->toFormattedDateString();
+                            $indicators['end_date'] = 'Sampai: ' . $data['end_date'];
                         }
 
                         return $indicators;
                     }),
-                // Filter lainnya...
+
+                // Tambahkan filter lainnya sesuai kebutuhan...
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -148,11 +184,8 @@ class SuratIzinApproveResource extends Resource
                         ->color('gray')
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->requiresConfirmation()
-                        ->action(function (SuratIzinApprove $record, array $data): void {
-                            // Hapus data di SuratIzinApproveDua jika ada dan statusnya 0
-                            $record->suratIzinApproveDua()
-                                ->where('status', 0)
-                                ->delete();
+                        ->action(function (SuratIzinApproveTiga $record, array $data): void {
+
 
                             $record->update([
                                 'status' => 0,
@@ -164,19 +197,16 @@ class SuratIzinApproveResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn ($record) => $record->status > 0 && $record->suratIzinApproveDua && $record->suratIzinApproveDua->status === 0),
+                        ->visible(fn ($record) => $record->status > 0),
                     Tables\Actions\Action::make('Approve')
                         ->requiresConfirmation()
                         ->icon('heroicon-o-check-circle')
-                        ->action(function (SuratIzinApprove $record, array $data): void {
+                        ->action(function (SuratIzinApproveTiga $record, array $data): void {
                             $record->update([
                                 'status' => 1,
                                 'user_id' => Auth::user()->id,
                             ]);
 
-                            $record->suratIzinApproveDua()->create([
-                                'surat_izin_approve_id' => $record->id,
-                            ]);
 
                             Notification::make()
                                 ->title('Data berhasil di Approve')
@@ -194,7 +224,7 @@ class SuratIzinApproveResource extends Resource
                         ])
                         ->requiresConfirmation()
                         ->icon('heroicon-o-x-circle')
-                        ->action(function (SuratIzinApprove $record, array $data): void {
+                        ->action(function (SuratIzinApproveTiga $record, array $data): void {
                             $record->update([
                                 'user_id' => Auth::user()->id,
                                 'status' => 2,
@@ -213,26 +243,8 @@ class SuratIzinApproveResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\Action::make('Approve yang dipilih')
-                        ->requiresConfirmation()
-                        ->icon('heroicon-o-check-circle')
-                        // ->action(function (SuratIzinApprove $record, array $data): void {
-                        //     // $record->update([
-                        //     //     'status' => 1,
-                        //     // ]);
-                        //     Notification::make()
-                        //         ->title('Data berhasil di Approve')
-                        //         ->success()
-                        //         ->send();
-                        // })
-                        ->color('success'),
                 ]),
-            ])
-            ->query(function (SuratIzinApprove $query) {
-                return $query->whereHas('suratIzin.user', function ($query) {
-                    $query->where('company_id', Auth::user()->company_id);
-                });
-            });
+            ]);
     }
 
     public static function getRelations(): array
@@ -245,9 +257,9 @@ class SuratIzinApproveResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSuratIzinApproves::route('/'),
-            'create' => Pages\CreateSuratIzinApprove::route('/create'),
-            'edit' => Pages\EditSuratIzinApprove::route('/{record}/edit'),
+            'index' => Pages\ListSuratIzinApproveTigas::route('/'),
+            'create' => Pages\CreateSuratIzinApproveTiga::route('/create'),
+            'edit' => Pages\EditSuratIzinApproveTiga::route('/{record}/edit'),
         ];
     }
 
@@ -256,12 +268,6 @@ class SuratIzinApproveResource extends Resource
         /** @var class-string<Model> $modelClass */
         $modelClass = static::$model;
 
-        $count = $modelClass::where('status', 0)
-            ->whereHas('suratIzin.user', function (Builder $query) {
-                $query->where('company_id', Auth::user()->company_id);
-            })
-            ->count();
-
-        return (string) $count;
+        return (string) $modelClass::where('status', 0)->count();
     }
 }

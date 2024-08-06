@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\SuratIzinApproveDuaResource\Pages;
 use App\Filament\Resources\SuratIzinApproveDuaResource\RelationManagers;
+use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Tables\Enums\ActionsPosition;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,8 @@ class SuratIzinApproveDuaResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationGroup = 'Approve Dua';
+
+    protected static ?int $navigationSort = 20;
 
 
     public static function form(Form $form): Form
@@ -60,7 +63,7 @@ class SuratIzinApproveDuaResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.lama_izin')
                     ->label('Lama Izin')
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->toggleable(isToggledHiddenByDefault: false)
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.tanggal_izin')
@@ -95,17 +98,59 @@ class SuratIzinApproveDuaResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('status')->view('tables.columns.status-surat-izin')
+                ViewColumn::make('status')
+                    ->view('tables.columns.status-surat-izin')
+                    ->label('Status Dua')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('status_tiga')->view('tables.columns.status-surat-izin')
+                ViewColumn::make('suratIzinApproveTiga.status')
+                    ->label('Status Tiga')
+                    ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
-                //
+                // Filter berdasarkan rentang tanggal
+                Tables\Filters\Filter::make('tanggal_izin')
+                    ->form([
+                        Forms\Components\DatePicker::make('start_date')
+                            ->label('Tanggal Mulai')
+                            ->placeholder('Pilih Tanggal Mulai'),
+                        Forms\Components\DatePicker::make('end_date')
+                            ->label('Tanggal Akhir')
+                            ->placeholder('Pilih Tanggal Akhir'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['start_date'], function ($query, $start) {
+                                $query->whereHas('suratIzinApprove.suratIzin', function ($query) use ($start) {
+                                    $query->whereDate('tanggal_izin', '>=', $start);
+                                });
+                            })
+                            ->when($data['end_date'], function ($query, $end) {
+                                $query->whereHas('suratIzinApprove.suratIzin', function ($query) use ($end) {
+                                    $query->whereDate('tanggal_izin', '<=', $end);
+                                });
+                            });
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['start_date'] ?? null) {
+                            $indicators['start_date'] = 'Tanggal Mulai: ' . Carbon::parse($data['start_date'])->toFormattedDateString();
+                        }
+
+                        if ($data['end_date'] ?? null) {
+                            $indicators['end_date'] = 'Tanggal Akhir: ' . Carbon::parse($data['end_date'])->toFormattedDateString();
+                        }
+
+                        return $indicators;
+                    }),
+
+                // Tambahkan filter lainnya sesuai kebutuhan...
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -116,10 +161,10 @@ class SuratIzinApproveDuaResource extends Resource
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->requiresConfirmation()
                         ->action(function (SuratIzinApproveDua $record, array $data): void {
-                            // // Hapus data di SuratIzinApproveDua jika ada dan statusnya 0
-                            // $record->suratIzinApproveDua()
-                            //     ->where('status', 0)
-                            //     ->delete();
+                            // Hapus data di SuratIzinApproveDua jika ada dan statusnya 0
+                            $record->suratIzinApproveTiga()
+                                ->where('status', 0)
+                                ->delete();
 
                             $record->update([
                                 'status' => 0,
@@ -130,8 +175,8 @@ class SuratIzinApproveDuaResource extends Resource
                                 ->title('Data berhasil di kembalikan')
                                 ->success()
                                 ->send();
-                        }),
-                    // ->visible(fn ($record) => $record->status > 0 && $record->suratIzinApproveDua && $record->suratIzinApproveDua->status === 0),
+                        })
+                        ->visible(fn ($record) => $record->status > 0 && $record->suratIzinApproveTiga && $record->suratIzinApproveTiga->status === 0),
                     Tables\Actions\Action::make('Approve')
                         ->requiresConfirmation()
                         ->icon('heroicon-o-check-circle')
@@ -141,9 +186,9 @@ class SuratIzinApproveDuaResource extends Resource
                                 'user_id' => Auth::user()->id,
                             ]);
 
-                            // $record->suratIzinApproveDua()->create([
-                            //     'surat_izin_approve_id' => $record->id,
-                            // ]);
+                            $record->suratIzinApproveTiga()->create([
+                                'surat_izin_approve_dua_id' => $record->id,
+                            ]);
 
                             Notification::make()
                                 ->title('Data berhasil di Approve')
@@ -203,5 +248,19 @@ class SuratIzinApproveDuaResource extends Resource
             'create' => Pages\CreateSuratIzinApproveDua::route('/create'),
             'edit' => Pages\EditSuratIzinApproveDua::route('/{record}/edit'),
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        /** @var class-string<Model> $modelClass */
+        $modelClass = static::$model;
+
+        $count = $modelClass::where('status', 0)
+            ->whereHas('suratIzinApprove.suratIzin.user', function (Builder $query) {
+                $query->where('company_id', Auth::user()->company_id);
+            })
+            ->count();
+
+        return (string) $count;
     }
 }
