@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources;
 
+use Closure;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
 use App\Models\Office;
 use App\Models\Company;
+use Filament\Forms\Set;
 use App\Enum\GenderType;
 use App\Models\Division;
 use App\Models\Position;
@@ -14,12 +16,13 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Hash;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Enums\ActionsPosition;
 use App\Filament\Resources\UserResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\UserResource\RelationManagers;
-use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -28,6 +31,8 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?string $navigationGroup = 'Settings';
+
+    protected static ?string $recordTitleAttribute = 'first_name';
 
     protected static ?int $navigationSort = 41;
 
@@ -90,18 +95,77 @@ class UserResource extends Resource
                                     ->label('Position')
                                     ->required()
                                     ->options(Position::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->createOptionForm([
+                                        Forms\Components\Section::make()
+                                            ->schema([
+                                                Forms\Components\TextInput::make('name')
+                                                    ->afterStateUpdated(function (Set $set, $state) {
+                                                        $set('slug', Position::generateUniqueSlug($state));
+                                                    })
+                                                    ->required()
+                                                    ->live(onBlur: true)
+                                                    ->maxLength(255),
+                                                Forms\Components\TextInput::make('slug')
+                                                    ->required()
+                                                    ->readOnly()
+                                                    ->afterStateUpdated(function (Closure $set, $state) {
+                                                        $set('slug', Position::generateUniqueSlug($state));
+                                                    })
+                                                    ->maxLength(255),
+                                                Forms\Components\Toggle::make('is_active')
+                                                    ->default(true)
+                                                    ->required(),
+                                            ])->columns(2),
+                                    ])
+                                    ->createOptionUsing(function ($data) {
+                                        return Position::create([
+                                            'name' => $data['name'],
+                                            'slug' => $data['slug'],
+                                            'is_active' => $data['is_active'],
+                                        ]);
+                                    }),
                                 Forms\Components\Select::make('division_id')
                                     ->label('Division')
                                     ->required()
                                     ->options(Division::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->createOptionForm([
+                                        Forms\Components\Section::make()
+                                            ->schema([
+                                                Forms\Components\TextInput::make('name')
+                                                    ->afterStateUpdated(function (Set $set, $state) {
+                                                        $set('slug', Division::generateUniqueSlug($state));
+                                                    })
+                                                    ->required()
+                                                    ->live(onBlur: true)
+                                                    ->maxLength(255),
+                                                Forms\Components\TextInput::make('slug')
+                                                    ->required()
+                                                    ->readOnly()
+                                                    ->afterStateUpdated(function (Closure $set, $state) {
+                                                        $set('slug', Division::generateUniqueSlug($state));
+                                                    })
+                                                    ->maxLength(255),
+                                                Forms\Components\Toggle::make('is_active')
+                                                    ->default(true)
+                                                    ->required(),
+                                            ])->columns(2),
+                                    ])
+                                    ->createOptionUsing(function ($data) {
+                                        return Position::create([
+                                            'name' => $data['name'],
+                                            'slug' => $data['slug'],
+                                            'is_active' => $data['is_active'],
+                                        ]);
+                                    }),
                                 Forms\Components\Select::make('status_karyawan')
                                     ->required()
                                     ->options([
                                         'tetap' => 'Tetap',
                                         'kontrak' => 'Kontrak',
                                         'magang' => 'Magang',
+                                        'harian lepas' => 'Harian Lepas',
                                     ])
                                     ->searchable(),
                                 Forms\Components\Select::make('roles')
@@ -119,11 +183,12 @@ class UserResource extends Resource
     {
         $firstName = $get('first_name');
 
-        if ($get('username')) {
+        if ($get('username') && $firstName) {
             $set('username', $get('username'));
         } else {
             if ($firstName) {
-                $baseUsername = strtolower(Str::slug($firstName));
+                // Menghapus spasi dari first_name
+                $baseUsername = strtolower(Str::slug(str_replace(' ', '', $firstName)));
                 $username = $baseUsername;
                 $count = 1;
 
@@ -157,7 +222,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('company.name')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('ofiice.name')
+                Tables\Columns\TextColumn::make('office.name')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
@@ -196,20 +261,20 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\Action::make('resetPassword')
-                    ->icon('heroicon-o-arrow-path')
-                    ->color('primary')
-                    ->action(function (User $record, array $data): void {
-                        $record->update([
-                            'password' => Hash::make('password'),
-                        ]);
-                        Notification::make()
-                            ->title('User Password Berhasil Diubah')
-                            ->success()
-                            ->send();
-                    })
-                    ->requiresConfirmation()
-                    ->visible(fn ($record) => $record->id != 1),
+                // Tables\Actions\Action::make('resetPassword')
+                //     ->icon('heroicon-o-arrow-path')
+                //     ->color('primary')
+                //     ->action(function (User $record, array $data): void {
+                //         $record->update([
+                //             'password' => Hash::make('password'),
+                //         ]);
+                //         Notification::make()
+                //             ->title('User Password Berhasil Diubah')
+                //             ->success()
+                //             ->send();
+                //     })
+                //     ->requiresConfirmation()
+                //     ->visible(fn ($record) => $record->id != 1),
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\ViewAction::make(),
@@ -218,8 +283,9 @@ class UserResource extends Resource
                             return $record->id !== 1 && !$record->hasRole('super_admin');
                         }),
                 ])
-                    ->tooltip('Actions'),
-            ])
+                    ->link()
+                    ->label('Actions'),
+            ], position: ActionsPosition::BeforeCells)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

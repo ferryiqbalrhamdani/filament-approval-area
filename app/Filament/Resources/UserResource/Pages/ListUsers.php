@@ -4,6 +4,7 @@ namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
 use App\Models\Company;
+use App\Models\User;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
@@ -25,12 +26,15 @@ class ListUsers extends ListRecords
         $data = [];
 
         // Tambahkan tab untuk semua data
-        $data['all'] = Tab::make('All Data')->modifyQueryUsing(fn (Builder $query) => $query);
+        $data['all'] = Tab::make('All Data')
+            ->modifyQueryUsing(fn (Builder $query) => $query)
+            ->badge(fn () => User::count());
 
         $companies = Company::orderBy('name', 'asc')->get();
         foreach ($companies as $company) {
             $data[$company->slug] = Tab::make($company->slug)
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('company_id', $company->id));
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('company_id', $company->id))
+                ->badge(fn () => User::where('company_id', $company->id)->count());
         }
 
         return $data;

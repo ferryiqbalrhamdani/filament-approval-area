@@ -22,10 +22,8 @@ class SuratIzin extends Model
         'jam_izin',
         'sampai_jam',
         'keterangan_izin',
-        'status',
-        'status_dua',
-        'status_tiga',
         'company_id',
+        'status_izin',
     ];
 
     public static function boot()

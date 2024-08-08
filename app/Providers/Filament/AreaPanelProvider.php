@@ -70,7 +70,7 @@ class AreaPanelProvider extends PanelProvider
                     ->shouldShowEditProfileForm(false)
                     ->shouldShowDeleteAccountForm(false),
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
-                \Hasnayeen\Themes\ThemesPlugin::make(),
+                // \Hasnayeen\Themes\ThemesPlugin::make(),
             ]);
     }
 }

@@ -47,4 +47,9 @@ class ListSuratIzinApproves extends ListRecords
                     ->count()),
         ];
     }
+
+    public function getDefaultActiveTab(): string | int | null
+    {
+        return 'processing';
+    }
 }

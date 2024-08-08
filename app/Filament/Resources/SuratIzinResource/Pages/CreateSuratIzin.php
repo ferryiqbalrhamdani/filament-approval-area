@@ -25,6 +25,14 @@ class CreateSuratIzin extends CreateRecord
         if ($data['keperluan_izin'] == 'Izin Datang Terlambat') {
             $data['jam_izin'] = '08:00';
         }
+        if ($data['keperluan_izin'] == 'Izin Tidak Masuk Kerja') {
+            $data['jam_izin'] = NULL;
+            $data['sampai_jam'] = NULL;
+        }
+        if ($data['keperluan_izin'] == 'Tugas Meninggalkan Kantor' && $data['status_izin'] == 'lebih_dari_sehari') {
+            $data['jam_izin'] = NULL;
+            $data['sampai_jam'] = NULL;
+        }
 
 
         // Parsing waktu mulai dan selesai
@@ -42,10 +50,14 @@ class CreateSuratIzin extends CreateRecord
         $data['user_id'] = auth()->id();
 
         // Mengatur durasi izin berdasarkan selisih waktu
-        if ($diffInHours > 0) {
+        if ($diffInHours > 0 && $diffInMinutes > 0) {
             $data['durasi_izin'] = $diffInHours . " Jam " . $diffInMinutes . " Menit";
-        } else {
+        } elseif ($diffInHours > 0 && $diffInMinutes == 0) {
+            $data['durasi_izin'] = $diffInHours . " Jam";
+        } elseif ($diffInHours == 0 && $diffInMinutes > 0) {
             $data['durasi_izin'] = $diffInMinutes . " Menit";
+        } else {
+            $data['durasi_izin'] = "";
         }
 
 
