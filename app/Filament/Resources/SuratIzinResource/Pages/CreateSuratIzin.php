@@ -47,7 +47,7 @@ class CreateSuratIzin extends CreateRecord
         $diffInMinutes = $diff->i;
 
         // Menyimpan user ID yang sedang login
-        $data['user_id'] = auth()->id();
+        $data['user_id'] = Auth::user()->id;
 
         // Mengatur durasi izin berdasarkan selisih waktu
         if ($diffInHours > 0 && $diffInMinutes > 0) {

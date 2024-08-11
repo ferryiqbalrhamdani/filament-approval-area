@@ -232,7 +232,7 @@ class SuratIzinApproveTigaResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn ($record) => $record->status > 0),
+                        ->visible(fn($record) => $record->status > 0),
                     Tables\Actions\Action::make('Approve')
                         ->requiresConfirmation()
                         ->icon('heroicon-o-check-circle')
@@ -249,7 +249,7 @@ class SuratIzinApproveTigaResource extends Resource
                                 ->send();
                         })
                         ->color('success')
-                        ->hidden(fn ($record) => $record->status > 0),
+                        ->hidden(fn($record) => $record->status > 0),
                     Tables\Actions\Action::make('Reject')
                         ->form([
                             Forms\Components\TextArea::make('keterangan')
@@ -271,7 +271,7 @@ class SuratIzinApproveTigaResource extends Resource
                                 ->send();
                         })
                         ->color('danger')
-                        ->hidden(fn ($record) => $record->status > 0),
+                        ->hidden(fn($record) => $record->status > 0),
                 ])
                     ->link()
                     ->label('Actions'),
@@ -300,7 +300,7 @@ class SuratIzinApproveTigaResource extends Resource
                 ]),
             ])
             ->checkIfRecordIsSelectableUsing(
-                fn (SuratIzinApproveTiga $record): int => $record->status === 0,
+                fn(SuratIzinApproveTiga $record): int => $record->status === 0,
             )
             ->recordAction(null)
             ->recordUrl(null);
@@ -324,7 +324,7 @@ class SuratIzinApproveTigaResource extends Resource
                                 ViewEntry::make('suratIzinApproveDua.suratIzinApprove.status')
                                     ->label('Status Satu')
                                     ->view('infolists.components.status-surat-izin'),
-                                ViewEntry::make('status')
+                                ViewEntry::make('suratIzinApproveDua.status')
                                     ->view('infolists.components.status-surat-izin')
                                     ->label('Status Dua'),
                                 ViewEntry::make('suratIzinApproveDua.suratIzinApproveTiga.status')
@@ -335,7 +335,7 @@ class SuratIzinApproveTigaResource extends Resource
                             ->schema([
                                 TextEntry::make('keterangan')
                                     ->hiddenlabel(),
-                            ])->visible(fn ($record) => $record->keterangan),
+                            ])->visible(fn($record) => $record->keterangan),
                     ]),
                 Section::make()
                     ->schema([
@@ -372,7 +372,7 @@ class SuratIzinApproveTigaResource extends Resource
                             ->time('H:i'),
                     ])
                     ->columns(3)
-                    ->visible(fn (SuratIzinApproveTiga $record): string => $record->suratIzinApproveDua->suratIzinApprove->suratIzin->lama_izin === '1 Hari' && $record->suratIzinApproveDua->suratIzinApprove->suratIzin->durasi_izin),
+                    ->visible(fn(SuratIzinApproveTiga $record): string => $record->suratIzinApproveDua->suratIzinApprove->suratIzin->lama_izin === '1 Hari' && $record->suratIzinApproveDua->suratIzinApprove->suratIzin->durasi_izin),
 
                 Fieldset::make('Keterangan Izin')
                     ->schema([
@@ -387,9 +387,8 @@ class SuratIzinApproveTigaResource extends Resource
                             ->width(800)
                             ->height(800)
                             ->size(800)
-                            ->columnSpanFull()
-                            ->link('storage'),
-                    ])->visible(fn (SuratIzinApproveTiga $record): string => $record->suratIzinApproveDua->suratIzinApprove->suratIzin->photo !== null),
+                            ->columnSpanFull(),
+                    ])->visible(fn(SuratIzinApproveTiga $record): string => $record->suratIzinApproveDua->suratIzinApprove->suratIzin->photo !== null),
             ])
             ->columns(1);
     }

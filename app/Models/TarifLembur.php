@@ -18,4 +18,9 @@ class TarifLembur extends Model
         'is_lumsum',
         'tarif_lumsum',
     ];
+
+    public function izinLembur()
+    {
+        return $this->belongsTo(SuratIzin::class);
+    }
 }
