@@ -38,7 +38,7 @@ class IzinLembur extends Model
 
     public function tarifLembur()
     {
-        return $this->hasOne(TarifLembur::class);
+        return $this->belongsTo(TarifLembur::class);
     }
 
     public function izinLemburApprove()

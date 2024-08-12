@@ -21,6 +21,6 @@ class TarifLembur extends Model
 
     public function izinLembur()
     {
-        return $this->belongsTo(SuratIzin::class);
+        return $this->hasOne(IzinLembur::class);
     }
 }

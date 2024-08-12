@@ -5,25 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class IzinLemburApproveDua extends Model
+class IzinLemburApproveTiga extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'izin_lembur_approve_id',
+        'izin_lembur_approve_dua_id',
         'user_id',
         'status',
         'keterangan',
     ];
 
-    public function izinLemburApprove()
+    public function izinLemburApproveDua()
     {
-        return $this->belongsTo(IzinLemburApprove::class);
-    }
-
-    public function izinLemburApproveTiga()
-    {
-        return $this->hasOne(IzinLemburApproveTiga::class);
+        return $this->belongsTo(IzinLemburApproveDua::class);
     }
 
     public function user()

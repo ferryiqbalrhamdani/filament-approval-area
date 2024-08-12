@@ -30,8 +30,32 @@ class CreateIzinLembur extends CreateRecord
         // Menghitung selisih waktu dalam jam
         $diffInHours = $jamMulai->diffInHours($sampaiJam);
 
+        $selisih = (int)$diffInHours;
+
         $data['lama_lembur'] = (int)$diffInHours;
         $data['total'] = 0;
+
+        // Menentukan apakah hari tersebut weekend atau weekday
+        $tanggalLembur = Carbon::parse($data['tanggal_lembur']);
+        $statusHari = $tanggalLembur->isWeekend() ? 'Weekend' : 'Weekday';
+
+        // Mencari tarif lembur yang sesuai
+        $tarifLembur = TarifLembur::where('status_hari', $statusHari)
+            ->where(function ($query) use ($selisih) {
+                if ($selisih >= 8) {
+                    // Jika lama lembur >= 8 jam, cari tarif lumsum
+                    $query->where('is_lumsum', true);
+                } else {
+                    // Jika < 8 jam, cari berdasarkan lama lembur atau operator '>='
+                    $query->where('lama_lembur', $selisih);
+                }
+            })
+            ->orderBy('lama_lembur', 'desc')
+            ->first();
+
+        $data['tarif_lembur_id'] = $tarifLembur->id;
+
+
 
         return $data;
     }

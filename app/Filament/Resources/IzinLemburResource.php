@@ -17,6 +17,11 @@ use Filament\Tables\Enums\ActionsPosition;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\IzinLemburResource\Pages;
 use App\Filament\Resources\IzinLemburResource\RelationManagers;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\Group;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
+use Filament\Infolists\Infolist;
 
 class IzinLemburResource extends Resource
 {
@@ -85,6 +90,12 @@ class IzinLemburResource extends Resource
                     ->sortable()
                     ->searchable(),
                 ViewColumn::make('izinLemburApprove.izinLemburApproveDua.status')
+                    ->view('tables.columns.status-surat-izin')
+                    ->label('Status Dua')
+                    ->alignment(Alignment::Center)
+                    ->sortable()
+                    ->searchable(),
+                ViewColumn::make('izinLemburApprove.izinLemburApproveDua.izinLemburApproveTiga.status')
                     ->view('tables.columns.status-surat-izin')
                     ->label('Status Dua')
                     ->alignment(Alignment::Center)
@@ -186,6 +197,101 @@ class IzinLemburResource extends Resource
     protected function getTableQuery(): Builder
     {
         return IzinLembur::where('user_id', Auth::id())->latest();
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Group::make()
+                    ->schema([
+                        Fieldset::make('Status')
+                            ->schema([
+                                ViewEntry::make('izinLemburApprove.status')
+                                    ->label('Status Satu')
+                                    ->view('infolists.components.status-surat-izin'),
+                                ViewEntry::make('izinLemburApprove.izinLemburApproveDua.status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Dua'),
+                                ViewEntry::make('izinLemburApprove.izinLemburApproveDua.izinLemburApproveTiga.status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Tiga'),
+                            ])->columns(3),
+                        Group::make()
+                            ->schema([
+                                Fieldset::make('Dibatalkan oleh')
+                                    ->schema([
+                                        TextEntry::make('izinLemburApprove.user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinLembur $record) => optional($record->izinLemburApprove)->status === 2),
+                                        TextEntry::make('izinLemburApprove.izinLemburApproveDua.user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinLembur $record) => optional(optional($record->izinLemburApprove)->izinLemburApproveDua)->status === 2),
+                                        TextEntry::make('izinLemburApprove.izinLemburApproveDua.izinLemburApproveTiga.user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinLembur $record) => optional(optional(optional($record->izinLemburApprove)->izinLemburApproveDua)->izinLemburApproveTiga)->status === 2),
+                                    ])
+                                    ->columnSpan(1),
+                                Fieldset::make('Keterangan')
+                                    ->schema([
+                                        TextEntry::make('izinLemburApprove.keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinLembur $record) => optional($record->izinLemburApprove)->status === 2),
+                                        TextEntry::make('izinLemburApprove.izinLemburApproveDua.keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinLembur $record) => optional(optional($record->izinLemburApprove)->izinLemburApproveDua)->status === 2),
+                                        TextEntry::make('izinLemburApprove.izinLemburApproveDua.izinLemburApproveTiga.keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinLembur $record) => optional(optional(optional($record->izinLemburApprove)->izinLemburApproveDua)->izinLemburApproveTiga)->status === 2),
+                                    ])
+                                    ->columnSpan(3),
+                            ])
+                            ->columns(4) // Set kolom menjadi 4 untuk membuat mereka sejajar
+                            ->visible(
+                                fn(IzinLembur $record) =>
+                                optional($record->izinLemburApprove)->status === 2 ||
+                                    optional(optional($record->izinLemburApprove)->izinLemburApproveDua)->status === 2 ||
+                                    optional(optional(optional($record->izinLemburApprove)->izinLemburApproveDua)->izinLemburApproveTiga)->status === 2
+                            ),
+
+                        Fieldset::make('')
+                            ->schema([
+                                TextEntry::make('tanggal_lembur')
+                                    ->date(),
+                                TextEntry::make('start_time')
+                                    ->time('H:i'),
+                                TextEntry::make('end_time')
+                                    ->time('H:i'),
+                                TextEntry::make('lama_lembur')
+                                    ->suffix(' Jam')
+                                    ->badge(),
+                            ])
+                            ->columns(4),
+
+                        Fieldset::make('Keterangan Izin')
+                            ->schema([
+                                TextEntry::make('keterangan_lembur')
+                                    ->hiddenlabel()
+                                    ->columnSpanFull(),
+                            ]),
+                    ])
+            ])
+            ->columns(1);
     }
 
     public static function getRelations(): array

@@ -16,6 +16,11 @@ class IzinLemburApprove extends Model
         'keterangan'
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 
     public function izinLembur()
     {
