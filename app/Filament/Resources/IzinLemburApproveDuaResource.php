@@ -2,81 +2,87 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\IzinLemburApproveDuaResource\Pages;
+use App\Filament\Resources\IzinLemburApproveDuaResource\RelationManagers;
+use App\Models\IzinLemburApproveDua;
 use Filament\Forms;
-use Filament\Tables;
 use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use App\Models\IzinLemburApprove;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\IzinLemburApproveResource\Pages;
-use App\Filament\Resources\IzinLemburApproveResource\RelationManagers;
-use App\Models\IzinLembur;
-use Carbon\Carbon;
 use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
+use Filament\Tables;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Enums\ActionsPosition;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
-class IzinLemburApproveResource extends Resource
+class IzinLemburApproveDuaResource extends Resource
 {
-    protected static ?string $model = IzinLemburApprove::class;
+    protected static ?string $model = IzinLemburApproveDua::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Approve Satu';
+    protected static ?string $navigationGroup = 'Approve Dua';
 
-    protected static ?int $navigationSort = 12;
+    protected static ?int $navigationSort = 22;
 
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([]);
+            ->schema([
+                //
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('izinLembur.user.first_name')
+                Tables\Columns\TextColumn::make('izinLemburApprove.izinLembur.user.first_name')
                     ->label('Nama User')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('izinLembur.tanggal_lembur')
+                Tables\Columns\TextColumn::make('izinLemburApprove.izinLembur.tanggal_lembur')
                     ->label('Tanggal Lembur')
                     ->date()
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('izinLembur.start_time')
+                Tables\Columns\TextColumn::make('izinLemburApprove.izinLembur.start_time')
                     ->label('Start Time')
                     ->time('H:i')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('izinLembur.end_time')
+                Tables\Columns\TextColumn::make('izinLemburApprove.izinLembur.end_time')
                     ->label('End Time')
                     ->time('H:i')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('izinLembur.lama_lembur')
+                Tables\Columns\TextColumn::make('izinLemburApprove.izinLembur.lama_lembur')
                     ->label('Lama Lembur')
                     ->badge()
                     ->suffix(' Jam')
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('status')
+                ViewColumn::make('izinLemburApprove.status')
                     ->view('tables.columns.status-surat-izin')
                     ->label('Status Satu')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('izinLemburApproveDua.status')
+                ViewColumn::make('status')
                     ->view('tables.columns.status-surat-izin')
                     ->label('Status Dua')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
+                // ViewColumn::make('status')
+                //     ->view('tables.columns.status-surat-izin')
+                //     ->label('Status Tiga')
+                //     ->alignment(Alignment::Center)
+                //     ->sortable()
+                //     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -87,69 +93,7 @@ class IzinLemburApproveResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\Filter::make('tanggal_lembur')
-                    ->form([
-                        Forms\Components\DatePicker::make('start_date')
-                            ->label('Tanggal Mulai')
-                            ->placeholder('Pilih Tanggal Mulai'),
-                        Forms\Components\DatePicker::make('end_date')
-                            ->label('Tanggal Akhir')
-                            ->placeholder('Pilih Tanggal Akhir'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when($data['start_date'], function ($query, $start) {
-                                $query->whereHas('izinLembur', function ($query) use ($start) {
-                                    $query->whereDate('tb_lembur.tanggal_lembur', '>=', $start);
-                                });
-                            })
-                            ->when($data['end_date'], function ($query, $end) {
-                                $query->whereHas('izinLembur', function ($query) use ($end) {
-                                    $query->whereDate('tb_lembur.tanggal_lembur', '<=', $end);
-                                });
-                            });
-                    })
-                    ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-
-                        if ($data['start_date'] ?? null) {
-                            $indicators['start_date'] = 'Tanggal Mulai: ' . Carbon::parse($data['start_date'])->toFormattedDateString();
-                        }
-
-                        if ($data['end_date'] ?? null) {
-                            $indicators['end_date'] = 'Tanggal Akhir: ' . Carbon::parse($data['end_date'])->toFormattedDateString();
-                        }
-
-                        return $indicators;
-                    }),
-
-                Tables\Filters\Filter::make('Tahun')
-                    ->form([
-                        Forms\Components\Select::make('tanggal_lembur')
-                            ->label('Tahun')
-                            ->options([
-                                0 => 'Semua Tahun',
-                                1 => 'Tahun Ini',
-                            ])
-                            ->default(1),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        if (isset($data['tanggal_lembur']) && $data['tanggal_lembur'] === 1) {
-                            $query->whereHas('izinLembur', function ($query) use ($data) {
-                                $query->whereYear('tanggal_lembur', Carbon::now()->year);
-                            });
-                        }
-                        return $query;
-                    })
-                    ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-                        if ($data['tanggal_lembur']) {
-                            $indicators['tanggal_lembur'] = 'Tahun: ' . Carbon::now()->year;
-                        }
-
-                        return $indicators;
-                    }),
-                // Filter lainnya...
+                //
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -159,11 +103,11 @@ class IzinLemburApproveResource extends Resource
                         ->color('gray')
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->requiresConfirmation()
-                        ->action(function (IzinLemburApprove $record, array $data): void {
+                        ->action(function (IzinLemburApproveDua $record, array $data): void {
                             // Hapus data di izinLemburApproveDua jika ada dan statusnya 0
-                            $record->izinLemburApproveDua()
-                                ->where('status', 0)
-                                ->delete();
+                            // $record->izinLemburApproveDua()
+                            //     ->where('status', 0)
+                            //     ->delete();
 
                             $record->update([
                                 'status' => 0,
@@ -179,13 +123,13 @@ class IzinLemburApproveResource extends Resource
                     Tables\Actions\Action::make('Approve')
                         ->requiresConfirmation()
                         ->icon('heroicon-o-check-circle')
-                        ->action(function (IzinLemburApprove $record, array $data): void {
+                        ->action(function (IzinLemburApproveDua $record, array $data): void {
                             $record->update([
                                 'status' => 1,
                                 'user_id' => Auth::user()->id,
                             ]);
 
-                            $record->izinLemburApproveDua()->create();
+                            // $record->izinLemburApproveDua()->create();
 
 
                             // $record->izinLemburApproveDua()->create([
@@ -208,7 +152,7 @@ class IzinLemburApproveResource extends Resource
                         ])
                         ->requiresConfirmation()
                         ->icon('heroicon-o-x-circle')
-                        ->action(function (IzinLemburApprove $record, array $data): void {
+                        ->action(function (IzinLemburApproveDua $record, array $data): void {
                             $record->update([
                                 'user_id' => Auth::user()->id,
                                 'status' => 2,
@@ -226,10 +170,10 @@ class IzinLemburApproveResource extends Resource
                     ->label('Actions'),
             ], position: ActionsPosition::BeforeCells)
             ->checkIfRecordIsSelectableUsing(
-                fn(IzinLemburApprove $record): int => $record->status === 0,
+                fn(IzinLemburApproveDua $record): int => $record->status === 0,
             )
-            ->query(function (IzinLemburApprove $query) {
-                return $query->whereHas('izinLembur.user', function ($query) {
+            ->query(function (IzinLemburApproveDua $query) {
+                return $query->whereHas('izinLemburApprove.izinLembur.user', function ($query) {
                     $query->where('company_id', Auth::user()->company_id);
                 });
             })
@@ -247,7 +191,7 @@ class IzinLemburApproveResource extends Resource
                                     'status' => 1,
                                     'keterangan' => null,
                                 ]);
-                                $record->izinLemburApproveDua()->create();
+                                // $record->izinLemburApproveDua()->create();
                             }
 
 
@@ -272,9 +216,9 @@ class IzinLemburApproveResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListIzinLemburApproves::route('/'),
-            'create' => Pages\CreateIzinLemburApprove::route('/create'),
-            'edit' => Pages\EditIzinLemburApprove::route('/{record}/edit'),
+            'index' => Pages\ListIzinLemburApproveDuas::route('/'),
+            'create' => Pages\CreateIzinLemburApproveDua::route('/create'),
+            'edit' => Pages\EditIzinLemburApproveDua::route('/{record}/edit'),
         ];
     }
 
@@ -284,7 +228,7 @@ class IzinLemburApproveResource extends Resource
         $modelClass = static::$model;
 
         $count = $modelClass::where('status', 0)
-            ->whereHas('izinLembur.user', function (Builder $query) {
+            ->whereHas('izinLemburApprove.izinLembur.user', function (Builder $query) {
                 $query->where('company_id', Auth::user()->company_id);
             })
             ->count();

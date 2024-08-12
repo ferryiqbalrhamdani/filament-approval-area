@@ -13,10 +13,10 @@ class IzinLembur extends Model
 
     protected $fillable = [
         'tarif_lembur_id',
-        'tanggal_cuti',
+        'tanggal_lembur',
         'start_time',
         'end_time',
-        'keterangan',
+        'keterangan_lembur',
         'total',
         'user_id',
         'lama_lembur',

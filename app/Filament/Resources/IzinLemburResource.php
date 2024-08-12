@@ -34,7 +34,7 @@ class IzinLemburResource extends Resource
             ->schema([
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\DatePicker::make('tanggal_cuti')
+                        Forms\Components\DatePicker::make('tanggal_lembur')
                             ->default(Carbon::now()->format('Y-m-d'))
                             ->required(),
                         Forms\Components\TimePicker::make('start_time')
@@ -48,7 +48,7 @@ class IzinLemburResource extends Resource
                             ->default('18:00')
                             ->seconds(false)
                             ->required(),
-                        Forms\Components\Textarea::make('keterangan')
+                        Forms\Components\Textarea::make('keterangan_lembur')
                             ->columnSpanFull()
                             ->required()
                             ->rows(5),
@@ -61,7 +61,7 @@ class IzinLemburResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('tanggal_cuti')
+                Tables\Columns\TextColumn::make('tanggal_lembur')
                     ->date()
                     ->sortable()
                     ->searchable(),
@@ -84,6 +84,12 @@ class IzinLemburResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
+                ViewColumn::make('izinLemburApprove.izinLemburApproveDua.status')
+                    ->view('tables.columns.status-surat-izin')
+                    ->label('Status Dua')
+                    ->alignment(Alignment::Center)
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -93,16 +99,73 @@ class IzinLemburResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
             ->recordAction(null)
             ->recordUrl(null)
             ->filters([
-                //
+                Tables\Filters\Filter::make('tanggal_lembur')
+                    ->form([
+                        Forms\Components\DatePicker::make('lembur_dari')
+                            ->placeholder(fn($state): string => 'Dec 18, ' . now()->subYear()->format('Y')),
+                        Forms\Components\DatePicker::make('sampai_lembur')
+                            ->placeholder(fn($state): string => now()->format('M d, Y')),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['lembur_dari'] ?? null,
+                                fn(Builder $query, $date): Builder => $query->whereDate('tanggal_lembur', '>=', $date),
+                            )
+                            ->when(
+                                $data['sampai_lembur'] ?? null,
+                                fn(Builder $query, $date): Builder => $query->whereDate('tanggal_lembur', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['lembur_dari'] ?? null) {
+                            $indicators['lembur_dari'] = 'Tanggal Mulai: ' . Carbon::parse($data['lembur_dari'])->toFormattedDateString();
+                        }
+                        if ($data['sampai_lembur'] ?? null) {
+                            $indicators['sampai_lembur'] = 'Tanggal Akhir: ' . Carbon::parse($data['sampai_lembur'])->toFormattedDateString();
+                        }
+
+                        return $indicators;
+                    }),
+                Tables\Filters\Filter::make('Tahun')
+                    ->form([
+                        Forms\Components\Select::make('tanggal_lembur')
+                            ->label('Tahun')
+                            ->options([
+                                0 => 'Semua Tahun',
+                                1 => 'Tahun Ini',
+                            ])
+                            ->default(1),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (isset($data['tanggal_lembur']) && $data['tanggal_lembur'] === 1) {
+                            $query->whereYear('tanggal_lembur', Carbon::now()->year);
+                        }
+                        return $query;
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['tanggal_lembur']) {
+                            $indicators['tanggal_lembur'] = 'Tahun: ' . Carbon::now()->year;
+                        }
+
+                        return $indicators;
+                    }),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
+                    Tables\Actions\ViewAction::make()
+                        ->label('Lihat Detail'),
+                    Tables\Actions\EditAction::make()
+                        ->action(fn($record) => $record->IzinLemburApprove->status == 0)
+                        ->visible(fn($record) => $record->IzinLemburApprove->status == 0),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn($record) => $record->IzinLemburApprove->status == 0),
                 ])
                     ->link()
                     ->label('Actions'),

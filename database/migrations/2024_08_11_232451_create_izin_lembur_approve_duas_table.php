@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tb_lembur', function (Blueprint $table) {
+        Schema::create('izin_lembur_approve_duas', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('izin_lembur_approve_id')->nullable()->constrained('izin_lembur_approves')->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete();
+            $table->integer('status')->default(0);
+            $table->text('keterangan')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tb_lembur', function (Blueprint $table) {
-            $table->dropColumn('user_id');
-        });
+        Schema::dropIfExists('izin_lembur_approve_duas');
     }
 };

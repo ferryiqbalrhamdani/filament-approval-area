@@ -21,4 +21,9 @@ class IzinLemburApprove extends Model
     {
         return $this->belongsTo(IzinLembur::class);
     }
+
+    public function izinLemburApproveDua()
+    {
+        return $this->hasOne(IzinLemburApproveDua::class);
+    }
 }
