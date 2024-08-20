@@ -8,14 +8,19 @@ use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\TarifLembur;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Auth;
 use App\Models\IzinLemburApproveTiga;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Infolists\Components\Group;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Enums\ActionsPosition;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Tables\Columns\Summarizers\Count;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\IzinLemburApproveTigaResource\Pages;
@@ -368,10 +373,7 @@ class IzinLemburApproveTigaResource extends Resource
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ])
-            ->groups([
-                Tables\Grouping\Group::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.first_name')
-                    ->collapsible(),
-            ]);
+        ;
     }
 
     public static function getRelations(): array
@@ -379,6 +381,97 @@ class IzinLemburApproveTigaResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Group::make()
+                    ->schema([
+                        Fieldset::make('Informasi User')
+                            ->schema([
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.full_name')
+                                    ->label('Nama Lengkap'),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.company.name')
+                                    ->label('Perusahaan'),
+                            ]),
+                        Fieldset::make('Status')
+                            ->schema([
+                                ViewEntry::make('izinLemburApproveDua.izinLemburApprove.status')
+                                    ->label('Status Satu')
+                                    ->view('infolists.components.status-surat-izin'),
+                                ViewEntry::make('izinLemburApproveDua.status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Dua'),
+                                ViewEntry::make('status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Tiga'),
+                            ])->columns(3),
+                        Fieldset::make('Keterangan')
+                            ->schema([
+                                TextEntry::make('keterangan')
+                                    ->hiddenlabel(),
+                            ])->visible(fn($record) => $record->keterangan),
+
+                        Fieldset::make('')
+                            ->schema([
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tanggal_lembur')
+                                    ->label('Tgl Lembur')
+                                    ->date(),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.start_time')
+                                    ->label('Start Time')
+                                    ->time('H:i'),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.end_time')
+                                    ->label('End Time')
+                                    ->time('H:i'),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.lama_lembur')
+                                    ->label('Lama Lembur')
+                                    ->suffix(' Jam')
+                                    ->badge(),
+                            ])
+                            ->columns(4),
+
+                        Fieldset::make('Keterangan Izin')
+                            ->schema([
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.keterangan_lembur')
+                                    ->hiddenlabel()
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Fieldset::make('Perhitungan Lembur')
+                            ->schema([
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.status_hari')
+                                    ->badge()
+                                    ->label('Status Hari')
+                                    ->columnSpanFull(),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.lama_lembur')
+                                    ->label('Lama Lembur')
+                                    ->suffix(' Jam'),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.tarif_lembur_perjam')
+                                    ->label('Tarif Lembur Per Jam')
+                                    ->money(
+                                        'IDR',
+                                        locale: 'id'
+                                    ),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.uang_makan')
+                                    ->label('Uang Makan')
+                                    ->money(
+                                        'IDR',
+                                        locale: 'id'
+                                    ),
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.total')
+                                    ->label('Total')
+                                    ->money(
+                                        'IDR',
+                                        locale: 'id'
+                                    ),
+
+                            ])
+                            ->columns(4),
+                    ])
+            ])
+            ->columns(1);
     }
 
     public static function getPages(): array
