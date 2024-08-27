@@ -75,12 +75,12 @@ class SuratIzinResource extends Resource
                                                     ->columns(3)
                                                     ->reactive()
                                                     ->columnSpanFull()
-                                                    ->visible(fn (Get $get) => $get('keperluan_izin') === 'Tugas Meninggalkan Kantor'),
+                                                    ->visible(fn(Get $get) => $get('keperluan_izin') === 'Tugas Meninggalkan Kantor'),
                                             ])
-                                            ->visible(fn (Get $get) => $get('keperluan_izin') === 'Tugas Meninggalkan Kantor'),
+                                            ->visible(fn(Get $get) => $get('keperluan_izin') === 'Tugas Meninggalkan Kantor'),
                                         Forms\Components\DatePicker::make('tanggal_izin')
                                             ->required()
-                                            ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                                            ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                                                 'Izin Datang Terlambat',
                                                 'Izin Tidak Masuk Kerja',
                                                 'Izin Meninggalkan Kantor',
@@ -89,10 +89,10 @@ class SuratIzinResource extends Resource
                                         Forms\Components\DatePicker::make('sampai_tanggal')
                                             ->required()
                                             ->afterOrEqual('tanggal_izin')
-                                            ->visible(fn (Get $get) => $get('keperluan_izin') === 'Izin Tidak Masuk Kerja'  || $get('status_izin') === 'lebih_dari_sehari'),
+                                            ->visible(fn(Get $get) => $get('keperluan_izin') === 'Izin Tidak Masuk Kerja'  || $get('status_izin') === 'lebih_dari_sehari'),
                                     ])->columns(2),
                             ])
-                            ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                            ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                                 'Izin Datang Terlambat',
                                 'Izin Tidak Masuk Kerja',
                                 'Izin Meninggalkan Kantor',
@@ -106,7 +106,7 @@ class SuratIzinResource extends Resource
                                             ->seconds(false)
                                             ->timezone('Asia/Jakarta')
                                             ->required()
-                                            ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                                            ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                                                 'Izin Meninggalkan Kantor',
                                                 'Tugas Meninggalkan Kantor',
                                             ])),
@@ -114,33 +114,33 @@ class SuratIzinResource extends Resource
                                             ->seconds(false)
                                             ->timezone('Asia/Jakarta')
                                             ->required()
-                                            ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                                            ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                                                 'Izin Datang Terlambat',
                                                 'Izin Meninggalkan Kantor',
                                                 'Tugas Meninggalkan Kantor',
                                             ])),
                                     ])->columns(2),
                             ])
-                            ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                            ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                                 'Izin Datang Terlambat',
                                 'Izin Meninggalkan Kantor',
                                 'Tugas Meninggalkan Kantor',
                             ]))
-                            ->hidden(fn (Get $get) => $get('status_izin') === 'lebih_dari_sehari' && $get('keperluan_izin') === 'Tugas Meninggalkan Kantor'),
+                            ->hidden(fn(Get $get) => $get('status_izin') === 'lebih_dari_sehari' && $get('keperluan_izin') === 'Tugas Meninggalkan Kantor'),
                         Forms\Components\Section::make()
                             ->schema([
                                 Forms\Components\Textarea::make('keterangan_izin')
                                     ->required()
                                     ->rows(5)
                                     ->columnSpanFull()
-                                    ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                                    ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                                         'Izin Datang Terlambat',
                                         'Izin Tidak Masuk Kerja',
                                         'Izin Meninggalkan Kantor',
                                         'Tugas Meninggalkan Kantor',
                                     ])),
                             ])
-                            ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                            ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                                 'Izin Datang Terlambat',
                                 'Izin Tidak Masuk Kerja',
                                 'Izin Meninggalkan Kantor',
@@ -159,7 +159,7 @@ class SuratIzinResource extends Resource
                             ]),
                     ])
                     ->columnSpan(['lg' => 1])
-                    ->visible(fn (Get $get) => in_array($get('keperluan_izin'), [
+                    ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
                         'Izin Datang Terlambat',
                         'Izin Tidak Masuk Kerja',
                         'Izin Meninggalkan Kantor',
@@ -237,19 +237,19 @@ class SuratIzinResource extends Resource
                 Tables\Filters\Filter::make('tanggal_izin')
                     ->form([
                         Forms\Components\DatePicker::make('izin_dari')
-                            ->placeholder(fn ($state): string => 'Dec 18, ' . now()->subYear()->format('Y')),
+                            ->placeholder(fn($state): string => 'Dec 18, ' . now()->subYear()->format('Y')),
                         Forms\Components\DatePicker::make('sampai_izin')
-                            ->placeholder(fn ($state): string => now()->format('M d, Y')),
+                            ->placeholder(fn($state): string => now()->format('M d, Y')),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['izin_dari'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('tanggal_izin', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('tanggal_izin', '>=', $date),
                             )
                             ->when(
                                 $data['sampai_izin'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('tanggal_izin', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('tanggal_izin', '<=', $date),
                             );
                     })
                     ->indicateUsing(function (array $data): array {
@@ -295,10 +295,10 @@ class SuratIzinResource extends Resource
                     Tables\Actions\ViewAction::make()
                         ->label('Lihat Detail'),
                     Tables\Actions\EditAction::make()
-                        ->action(fn ($record) => $record->suratIzinApprove->status == 0)
-                        ->visible(fn ($record) => $record->suratIzinApprove->status == 0),
+                        ->action(fn($record) => $record->suratIzinApprove->status == 0)
+                        ->visible(fn($record) => $record->suratIzinApprove->status == 0),
                     Tables\Actions\DeleteAction::make()
-                        ->visible(fn ($record) => $record->suratIzinApprove->status == 0),
+                        ->visible(fn($record) => $record->suratIzinApprove->status == 0),
                 ])
                     ->link()
                     ->label('Actions'),
@@ -307,10 +307,10 @@ class SuratIzinResource extends Resource
                 Tables\Actions\DeleteBulkAction::make(),
             ])
             ->checkIfRecordIsSelectableUsing(
-                fn (SuratIzin $record): int => $record->suratIzinApprove->status === 0,
+                fn(SuratIzin $record): int => $record->suratIzinApprove->status === 0,
             )
             ->query(
-                fn (SuratIzin $query) => $query->where('user_id', Auth::id())
+                fn(SuratIzin $query) => $query->where('user_id', Auth::id())
             );
     }
 
@@ -341,19 +341,19 @@ class SuratIzinResource extends Resource
                                             ->badge()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn (SuratIzin $record) => optional($record->suratIzinApprove)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional($record->suratIzinApprove)->status === 2),
                                         TextEntry::make('suratIzinApprove.suratIzinApproveDua.user.first_name')
                                             ->hiddenLabel()
                                             ->badge()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn (SuratIzin $record) => optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2),
                                         TextEntry::make('suratIzinApprove.suratIzinApproveDua.suratIzinApproveTiga.user.first_name')
                                             ->hiddenLabel()
                                             ->badge()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn (SuratIzin $record) => optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2),
                                     ])
                                     ->columnSpan(1), // Kolom kecil untuk "Dibatalkan oleh"
                                 Fieldset::make('Keterangan')
@@ -362,23 +362,23 @@ class SuratIzinResource extends Resource
                                             ->hiddenLabel()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn (SuratIzin $record) => optional($record->suratIzinApprove)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional($record->suratIzinApprove)->status === 2),
                                         TextEntry::make('suratIzinApprove.suratIzinApproveDua.keterangan')
                                             ->hiddenLabel()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn (SuratIzin $record) => optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2),
                                         TextEntry::make('suratIzinApprove.suratIzinApproveDua.suratIzinApproveTiga.keterangan')
                                             ->hiddenLabel()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn (SuratIzin $record) => optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2),
                                     ])
                                     ->columnSpan(3), // Kolom lebih lebar untuk "Keterangan"
                             ])
                             ->columns(4) // Set kolom menjadi 4 untuk membuat mereka sejajar
                             ->visible(
-                                fn (SuratIzin $record) =>
+                                fn(SuratIzin $record) =>
                                 optional($record->suratIzinApprove)->status === 2 ||
                                     optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2 ||
                                     optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2
@@ -412,8 +412,7 @@ class SuratIzinResource extends Resource
                                     ->time('H:i'),
                             ])
                             ->columns(3)
-                            ->visible(fn (SuratIzin $record): string => $record->lama_izin === '1 Hari'),
-
+                            ->visible(fn(SuratIzin $record): string => $record->lama_izin === '1 Hari' && $record->durasi_izin),
                         Fieldset::make('Keterangan Izin')
                             ->schema([
                                 TextEntry::make('keterangan_izin')
@@ -428,7 +427,7 @@ class SuratIzinResource extends Resource
                                     ->height(800)
                                     ->size(800)
                                     ->columnSpanFull(),
-                            ])->visible(fn (SuratIzin $record): string => $record->photo !== null),
+                            ])->visible(fn(SuratIzin $record): string => $record->photo !== null),
                     ]),
             ])
             ->columns(1);

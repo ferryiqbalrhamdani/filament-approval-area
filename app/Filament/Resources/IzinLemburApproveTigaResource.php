@@ -16,13 +16,17 @@ use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Infolists\Components\Group;
 use Filament\Notifications\Notification;
+use pxlrbt\FilamentExcel\Columns\Column;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Tables\Columns\Summarizers\Count;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\IzinLemburApproveTigaResource\Pages;
 use App\Filament\Resources\IzinLemburApproveTigaResource\RelationManagers;
 
@@ -50,6 +54,10 @@ class IzinLemburApproveTigaResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.first_name')
                     ->label('Nama User')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.company.slug')
+                    ->badge()
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tanggal_lembur')
@@ -331,9 +339,9 @@ class IzinLemburApproveTigaResource extends Resource
                     ->link()
                     ->label('Actions'),
             ], position: ActionsPosition::BeforeCells)
-            ->checkIfRecordIsSelectableUsing(
-                fn(IzinLemburApproveTiga $record): int => $record->status === 0,
-            )
+            // ->checkIfRecordIsSelectableUsing(
+            //     fn(IzinLemburApproveTiga $record): int => $record->status === 0,
+            // )
             ->recordAction(null)
             ->recordUrl(null)
             ->bulkActions([
@@ -371,6 +379,52 @@ class IzinLemburApproveTigaResource extends Resource
                                 ->send();
                         })
                         ->deselectRecordsAfterCompletion(),
+                    ExportBulkAction::make()
+                        ->label('Eksport data yang dipilih')
+                        ->exports([
+                            ExcelExport::make()
+                                ->askForFilename()
+                                ->askForWriterType()
+                                ->withColumns([
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.first_name')
+                                        ->heading('Nama User')
+                                        ->formatStateUsing(fn($state, $record) => $record->izinLemburApproveDua->izinLemburApprove->izinLembur->user->first_name . ' ' . $record->izinLemburApproveDua->izinLemburApprove->izinLembur->user->last_name),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.company.name')
+                                        ->heading('Nama Perusahaan'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.user.jk')
+                                        ->heading('Jenis Kelamin'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.keterangan_lembur')
+                                        ->heading('Keterangan Lembur'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.status_hari')
+                                        ->heading('Status Hari'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tanggal_lembur')
+                                        ->heading('Tanggal Lembur'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.start_time')
+                                        ->heading('Waktu Mulai'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.end_time')
+                                        ->heading('Waktu Selesai'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.lama_lembur')
+                                        ->heading('Lama Lembur (Jam)'),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.tarif_lembur_perjam')
+                                        ->heading('Upah Perjam')
+                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.uang_makan')
+                                        ->heading('Uang Makan')
+                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.tarif_lumsum')
+                                        ->heading('Uang Lumsum')
+                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                    Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.total')
+                                        ->heading('Total')
+                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                    Column::make('status')
+                                        ->heading('Status')
+                                        ->formatStateUsing(fn($state) => $state === 0 ? 'Diproses' : ($state === 1 ? 'Disetujui' : 'Ditolak')),
+                                    Column::make('keterangan')
+                                        ->heading('Keterangan'),
+                                ]),
+                        ]),
+
                 ]),
             ])
         ;
@@ -445,7 +499,7 @@ class IzinLemburApproveTigaResource extends Resource
                                     ->badge()
                                     ->label('Status Hari')
                                     ->columnSpanFull(),
-                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.lama_lembur')
+                                TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.lama_lembur')
                                     ->label('Lama Lembur')
                                     ->suffix(' Jam'),
                                 TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.tarif_lembur_perjam')
@@ -462,6 +516,8 @@ class IzinLemburApproveTigaResource extends Resource
                                     ),
                                 TextEntry::make('izinLemburApproveDua.izinLemburApprove.izinLembur.total')
                                     ->label('Total')
+                                    ->badge()
+                                    ->color('success')
                                     ->money(
                                         'IDR',
                                         locale: 'id'

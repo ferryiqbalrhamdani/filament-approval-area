@@ -27,8 +27,8 @@ class ListSuratIzinApproveTigas extends ListRecords
 
         // Add a tab for all data
         $data['all'] = Tab::make('All')
-            ->modifyQueryUsing(fn (Builder $query) => $query)
-            ->badge(fn () => SuratIzinApproveTiga::count());
+            ->modifyQueryUsing(fn(Builder $query) => $query)
+            ->badge(fn() => SuratIzinApproveTiga::count());
 
         // Get companies, excluding specific slugs and names
         $companies = Company::where('slug', '!=', 'Tidak Ada')
@@ -38,10 +38,10 @@ class ListSuratIzinApproveTigas extends ListRecords
 
         foreach ($companies as $company) {
             $data[$company->slug] = Tab::make($company->slug)
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin.user', function (Builder $query) use ($company) {
+                ->modifyQueryUsing(fn(Builder $query) => $query->whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin.user', function (Builder $query) use ($company) {
                     $query->where('company_id', $company->id);
                 }))
-                ->badge(fn () => SuratIzinApproveTiga::whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin.user', function (Builder $query) use ($company) {
+                ->badge(fn() => SuratIzinApproveTiga::whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin.user', function (Builder $query) use ($company) {
                     $query->where('company_id', $company->id);
                 })->count());
         }

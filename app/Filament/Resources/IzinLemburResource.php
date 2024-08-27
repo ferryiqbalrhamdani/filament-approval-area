@@ -97,7 +97,7 @@ class IzinLemburResource extends Resource
                     ->searchable(),
                 ViewColumn::make('izinLemburApprove.izinLemburApproveDua.izinLemburApproveTiga.status')
                     ->view('tables.columns.status-surat-izin')
-                    ->label('Status Dua')
+                    ->label('Status Tiga')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
