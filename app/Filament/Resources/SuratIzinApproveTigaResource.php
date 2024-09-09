@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\SuratIzinApproveTigaResource\Pages;
 use App\Filament\Resources\SuratIzinApproveTigaResource\RelationManagers;
+use App\Filament\Resources\SuratIzinApproveTigaResource\Widgets\SuratIzinApproveTigaStats;
 
 class SuratIzinApproveTigaResource extends Resource
 {
@@ -269,65 +270,63 @@ class SuratIzinApproveTigaResource extends Resource
                     ->label('Actions'),
             ], position: ActionsPosition::BeforeCells)
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('Approve yang dipilih')
-                        ->requiresConfirmation()
-                        ->icon('heroicon-o-check-circle')
-                        ->color('success')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
-                            foreach ($records as $record) {
-                                $record->update([
-                                    'status' => 1,
-                                    'keterangan' => null,
-                                ]);
-                            }
+                Tables\Actions\BulkAction::make('Approve yang dipilih')
+                    ->requiresConfirmation()
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                        foreach ($records as $record) {
+                            $record->update([
+                                'status' => 1,
+                                'keterangan' => null,
+                            ]);
+                        }
 
 
-                            Notification::make()
-                                ->title('Data yang dipilih berhasil di Approve')
-                                ->success()
-                                ->send();
-                        })
-                        ->deselectRecordsAfterCompletion(),
-                    ExportBulkAction::make()
-                        ->label('Eksport data yang dipilih')
-                        ->exports([
-                            ExcelExport::make()
-                                ->askForFilename()
-                                ->askForWriterType()
-                                ->withColumns([
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.first_name')
-                                        ->heading('Nama User')
-                                        ->formatStateUsing(fn($state, $record) => $record->suratIzinApproveDua->suratIzinApprove->suratIzin->user->first_name . ' ' . $record->suratIzinApproveDua->suratIzinApprove->suratIzin->user->last_name),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.company.name')
-                                        ->heading('Perusahaan'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.jk')
-                                        ->heading('Jenis Kelamin'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.keperluan_izin')
-                                        ->heading('Keperluan Izin'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.lama_izin')
-                                        ->heading('Lama Izin'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.tanggal_izin')
-                                        ->heading('Tgl. Izin'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.sampai_tanggal')
-                                        ->heading('Sampai Tgl. Izin'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.durasi_izin')
-                                        ->heading('Durasi Izin'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.jam_izin')
-                                        ->heading('Jam Izin'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.sampai_jam')
-                                        ->heading('Sampai Jam'),
-                                    Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.keterangan_izin')
-                                        ->heading('Keterangan Izin'),
-                                    Column::make('status')
-                                        ->heading('Status')
-                                        ->formatStateUsing(fn($state) => $state === 0 ? 'Diproses' : ($state === 1 ? 'Disetujui' : 'Ditolak')),
-                                    Column::make('keterangan')
-                                        ->heading('Keterangan'),
-                                ])
-                        ])
+                        Notification::make()
+                            ->title('Data yang dipilih berhasil di Approve')
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                ExportBulkAction::make()
+                    ->label('Eksport data yang dipilih')
+                    ->exports([
+                        ExcelExport::make()
+                            ->askForFilename()
+                            ->askForWriterType()
+                            ->withColumns([
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.first_name')
+                                    ->heading('Nama User')
+                                    ->formatStateUsing(fn($state, $record) => $record->suratIzinApproveDua->suratIzinApprove->suratIzin->user->first_name . ' ' . $record->suratIzinApproveDua->suratIzinApprove->suratIzin->user->last_name),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.company.name')
+                                    ->heading('Perusahaan'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.user.jk')
+                                    ->heading('Jenis Kelamin'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.keperluan_izin')
+                                    ->heading('Keperluan Izin'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.lama_izin')
+                                    ->heading('Lama Izin'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.tanggal_izin')
+                                    ->heading('Tgl. Izin'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.sampai_tanggal')
+                                    ->heading('Sampai Tgl. Izin'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.durasi_izin')
+                                    ->heading('Durasi Izin'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.jam_izin')
+                                    ->heading('Jam Izin'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.sampai_jam')
+                                    ->heading('Sampai Jam'),
+                                Column::make('suratIzinApproveDua.suratIzinApprove.suratIzin.keterangan_izin')
+                                    ->heading('Keterangan Izin'),
+                                Column::make('status')
+                                    ->heading('Status')
+                                    ->formatStateUsing(fn($state) => $state === 0 ? 'Diproses' : ($state === 1 ? 'Disetujui' : 'Ditolak')),
+                                Column::make('keterangan')
+                                    ->heading('Keterangan'),
+                            ])
+                    ])
 
-                ]),
             ])
             // ->checkIfRecordIsSelectableUsing(
             //     fn(SuratIzinApproveTiga $record): int => $record->status === 0,
@@ -445,5 +444,12 @@ class SuratIzinApproveTigaResource extends Resource
         $modelClass = static::$model;
 
         return (string) $modelClass::where('status', 0)->count();
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            SuratIzinApproveTigaStats::class,
+        ];
     }
 }

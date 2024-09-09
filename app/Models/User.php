@@ -28,6 +28,7 @@ class User extends Authenticatable
         'division_id',
         'jk',
         'status_karyawan',
+        'cuti',
     ];
 
     /**

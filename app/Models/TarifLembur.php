@@ -11,7 +11,6 @@ class TarifLembur extends Model
 
     protected $fillable = [
         'status_hari',
-        'operator',
         'lama_lembur',
         'tarif_lembur_perjam',
         'uang_makan',

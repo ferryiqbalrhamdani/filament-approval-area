@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\IzinLemburApproveTigaResource\Pages;
 use App\Filament\Resources\IzinLemburApproveTigaResource\RelationManagers;
+use App\Filament\Resources\IzinLemburApproveTigaResource\Widgets\IzinLemburApproveTigaStats;
 
 class IzinLemburApproveTigaResource extends Resource
 {
@@ -545,5 +546,12 @@ class IzinLemburApproveTigaResource extends Resource
         $modelClass = static::$model;
 
         return (string) $modelClass::where('status', 0)->count();
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            IzinLemburApproveTigaStats::class,
+        ];
     }
 }

@@ -48,4 +48,9 @@ class ListIzinLemburApproveTigas extends ListRecords
 
         return $data;
     }
+
+    protected function getHeaderWidgets(): array
+    {
+        return IzinLemburApproveTigaResource::getWidgets();
+    }
 }

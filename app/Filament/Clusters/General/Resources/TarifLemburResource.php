@@ -29,12 +29,6 @@ class TarifLemburResource extends Resource
             ->schema([
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\Select::make('operator')
-                            ->options([
-                                '==' => 'Sama dengan',
-                                '>=' => 'Lebih dari atau sama dengan',
-                            ])
-                            ->required(),
                         Forms\Components\TextInput::make('lama_lembur')
                             ->label('Lama Lembur')
                             ->suffix('Jam')
@@ -79,9 +73,6 @@ class TarifLemburResource extends Resource
                     })
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('operator')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('lama_lembur')
                     ->numeric()
                     ->suffix(' Jam')

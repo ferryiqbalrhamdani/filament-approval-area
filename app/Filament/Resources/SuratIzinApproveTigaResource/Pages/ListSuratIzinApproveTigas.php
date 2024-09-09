@@ -48,4 +48,9 @@ class ListSuratIzinApproveTigas extends ListRecords
 
         return $data;
     }
+
+    protected function getHeaderWidgets(): array
+    {
+        return SuratIzinApproveTigaResource::getWidgets();
+    }
 }

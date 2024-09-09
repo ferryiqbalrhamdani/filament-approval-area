@@ -17,6 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Enums\ActionsPosition;
@@ -50,8 +51,8 @@ class UserResource extends Resource
                                     ->required()
                                     ->live(onBlur: true)
                                     ->maxLength(255)
-                                    ->afterStateHydrated(fn ($set, $get) => self::generateUsername($set, $get))
-                                    ->afterStateUpdated(fn ($set, $get) => self::generateUsername($set, $get)),
+                                    ->afterStateHydrated(fn($set, $get) => self::generateUsername($set, $get))
+                                    ->afterStateUpdated(fn($set, $get) => self::generateUsername($set, $get)),
                                 Forms\Components\TextInput::make('last_name')
                                     ->label('Last Name')
                                     ->helperText('optional')
@@ -168,12 +169,18 @@ class UserResource extends Resource
                                         'harian lepas' => 'Harian Lepas',
                                     ])
                                     ->searchable(),
+                                Forms\Components\TextInput::make('cuti')
+                                    ->label('Sisa Cuti')
+                                    ->integer()
+                                    ->maxLength(255)
+                                    ->minValue(0)
+                                    ->required(),
                                 Forms\Components\Select::make('roles')
-                                    ->relationship('roles', 'name', fn (Builder $query) => $query->where('id', '>', 1)->orWhere('name', '!=', 'super_admin')->orderBy('name', 'asc'))
+                                    ->relationship('roles', 'name', fn(Builder $query) => $query->where('id', '>', 1)->orWhere('name', '!=', 'super_admin')->orderBy('name', 'asc'))
                                     ->required()
                                     ->multiple()
                                     ->preload()
-                                    ->searchable()
+                                    ->searchable(),
                             ])->columns(3),
                     ]),
             ]);
@@ -306,6 +313,20 @@ class UserResource extends Resource
             'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['first_name', 'last_name'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Product $record */
+
+        return [
+            'Company' => optional($record->company)->name,
         ];
     }
 }
