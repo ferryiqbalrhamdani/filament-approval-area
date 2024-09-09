@@ -209,13 +209,13 @@ class SuratIzinResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('suratIzinApprove.suratIzinApproveDua.status')
+                ViewColumn::make('suratIzinApproveDua.status')
                     ->label('Status Dua')
                     ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('suratIzinApprove.suratIzinApproveDua.suratIzinApproveTiga.status')
+                ViewColumn::make('suratIzinApproveTiga.status')
                     ->label('Status Tiga')
                     ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
@@ -295,10 +295,10 @@ class SuratIzinResource extends Resource
                     Tables\Actions\ViewAction::make()
                         ->label('Lihat Detail'),
                     Tables\Actions\EditAction::make()
-                        ->action(fn($record) => $record->suratIzinApprove->status == 0)
-                        ->visible(fn($record) => $record->suratIzinApprove->status == 0),
+                        ->action(fn($record) => $record->suratIzinApprove->status == 0 && $record->suratIzinApproveDua->status == 0 && $record->suratIzinApproveTiga->status == 0)
+                        ->visible(fn($record) => $record->suratIzinApprove->status == 0 && $record->suratIzinApproveDua->status == 0 && $record->suratIzinApproveTiga->status == 0),
                     Tables\Actions\DeleteAction::make()
-                        ->visible(fn($record) => $record->suratIzinApprove->status == 0),
+                        ->visible(fn($record) => $record->suratIzinApprove->status == 0 && $record->suratIzinApproveDua->status == 0 && $record->suratIzinApproveTiga->status == 0),
                 ])
                     ->link()
                     ->label('Actions'),
@@ -307,7 +307,7 @@ class SuratIzinResource extends Resource
                 Tables\Actions\DeleteBulkAction::make(),
             ])
             ->checkIfRecordIsSelectableUsing(
-                fn(SuratIzin $record): int => $record->suratIzinApprove->status === 0,
+                fn(SuratIzin $record): int => $record->suratIzinApprove->status === 0 && $record->suratIzinApproveDua->status == 0 && $record->suratIzinApproveTiga->status == 0,
             )
             ->query(
                 fn(SuratIzin $query) => $query->where('user_id', Auth::id())
@@ -325,10 +325,10 @@ class SuratIzinResource extends Resource
                                 ViewEntry::make('suratIzinApprove.status')
                                     ->label('Status Satu')
                                     ->view('infolists.components.status-surat-izin'),
-                                ViewEntry::make('suratIzinApprove.suratIzinApproveDua.status')
+                                ViewEntry::make('suratIzinApproveDua.status')
                                     ->view('infolists.components.status-surat-izin')
                                     ->label('Status Dua'),
-                                ViewEntry::make('suratIzinApprove.suratIzinApproveDua.suratIzinApproveTiga.status')
+                                ViewEntry::make('suratIzinApproveTiga.status')
                                     ->view('infolists.components.status-surat-izin')
                                     ->label('Status Tiga'),
                             ])->columns(3),
@@ -342,18 +342,18 @@ class SuratIzinResource extends Resource
                                             ->color('danger')
                                             ->columnSpanFull()
                                             ->visible(fn(SuratIzin $record) => optional($record->suratIzinApprove)->status === 2),
-                                        TextEntry::make('suratIzinApprove.suratIzinApproveDua.user.first_name')
+                                        TextEntry::make('suratIzinApproveDua.user.first_name')
                                             ->hiddenLabel()
                                             ->badge()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn(SuratIzin $record) => optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2),
-                                        TextEntry::make('suratIzinApprove.suratIzinApproveDua.suratIzinApproveTiga.user.first_name')
+                                            ->visible(fn(SuratIzin $record) => optional($record->suratIzinApproveDua)->status === 2),
+                                        TextEntry::make('suratIzinApproveTiga.user.first_name')
                                             ->hiddenLabel()
                                             ->badge()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn(SuratIzin $record) => optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional($record->suratIzinApproveTiga)->status === 2),
                                     ])
                                     ->columnSpan(1), // Kolom kecil untuk "Dibatalkan oleh"
                                 Fieldset::make('Keterangan')
@@ -363,16 +363,16 @@ class SuratIzinResource extends Resource
                                             ->color('danger')
                                             ->columnSpanFull()
                                             ->visible(fn(SuratIzin $record) => optional($record->suratIzinApprove)->status === 2),
-                                        TextEntry::make('suratIzinApprove.suratIzinApproveDua.keterangan')
+                                        TextEntry::make('suratIzinApproveDua.keterangan')
                                             ->hiddenLabel()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn(SuratIzin $record) => optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2),
-                                        TextEntry::make('suratIzinApprove.suratIzinApproveDua.suratIzinApproveTiga.keterangan')
+                                            ->visible(fn(SuratIzin $record) => optional($record->suratIzinApproveDua)->status === 2),
+                                        TextEntry::make('suratIzinApproveTiga.keterangan')
                                             ->hiddenLabel()
                                             ->color('danger')
                                             ->columnSpanFull()
-                                            ->visible(fn(SuratIzin $record) => optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2),
+                                            ->visible(fn(SuratIzin $record) => optional($record->suratIzinApproveTiga)->status === 2),
                                     ])
                                     ->columnSpan(3), // Kolom lebih lebar untuk "Keterangan"
                             ])
@@ -380,8 +380,8 @@ class SuratIzinResource extends Resource
                             ->visible(
                                 fn(SuratIzin $record) =>
                                 optional($record->suratIzinApprove)->status === 2 ||
-                                    optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->status === 2 ||
-                                    optional(optional(optional($record->suratIzinApprove)->suratIzinApproveDua)->suratIzinApproveTiga)->status === 2
+                                    optional($record->suratIzinApproveDua)->status === 2 ||
+                                    optional($record->suratIzinApproveTiga)->status === 2
                             ),
                         Section::make()
                             ->schema([

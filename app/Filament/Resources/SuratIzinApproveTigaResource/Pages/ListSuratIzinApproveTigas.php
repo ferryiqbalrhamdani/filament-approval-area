@@ -38,10 +38,10 @@ class ListSuratIzinApproveTigas extends ListRecords
 
         foreach ($companies as $company) {
             $data[$company->slug] = Tab::make($company->slug)
-                ->modifyQueryUsing(fn(Builder $query) => $query->whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin.user', function (Builder $query) use ($company) {
+                ->modifyQueryUsing(fn(Builder $query) => $query->whereHas('suratIzin.user', function (Builder $query) use ($company) {
                     $query->where('company_id', $company->id);
                 }))
-                ->badge(fn() => SuratIzinApproveTiga::whereHas('suratIzinApproveDua.suratIzinApprove.suratIzin.user', function (Builder $query) use ($company) {
+                ->badge(fn() => SuratIzinApproveTiga::whereHas('suratIzin.user', function (Builder $query) use ($company) {
                     $query->where('company_id', $company->id);
                 })->count());
         }

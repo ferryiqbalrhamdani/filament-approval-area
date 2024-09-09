@@ -97,13 +97,13 @@ class SuratIzinApproveResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('suratIzinApproveDua.status')
+                ViewColumn::make('suratIzin.suratIzinApproveDua.status')
                     ->label('Status Dua')
                     ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('suratIzinApproveDua.suratIzinApproveTiga.status')
+                ViewColumn::make('suratIzin.suratIzinApproveTiga.status')
                     ->label('Status Tiga')
                     ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
@@ -186,9 +186,7 @@ class SuratIzinApproveResource extends Resource
                         ->requiresConfirmation()
                         ->action(function (SuratIzinApprove $record, array $data): void {
                             // Hapus data di SuratIzinApproveDua jika ada dan statusnya 0
-                            $record->suratIzinApproveDua()
-                                ->where('status', 0)
-                                ->delete();
+
 
                             $record->update([
                                 'status' => 0,
@@ -200,7 +198,7 @@ class SuratIzinApproveResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn ($record) => $record->status > 0),
+                        ->visible(fn($record) => $record->status > 0),
                     Tables\Actions\Action::make('Approve')
                         ->requiresConfirmation()
                         ->icon('heroicon-o-check-circle')
@@ -210,17 +208,13 @@ class SuratIzinApproveResource extends Resource
                                 'user_id' => Auth::user()->id,
                             ]);
 
-                            $record->suratIzinApproveDua()->create([
-                                'surat_izin_approve_id' => $record->id,
-                            ]);
-
                             Notification::make()
                                 ->title('Data berhasil di Approve')
                                 ->success()
                                 ->send();
                         })
                         ->color('success')
-                        ->hidden(fn ($record) => $record->status > 0),
+                        ->hidden(fn($record) => $record->status > 0),
                     Tables\Actions\Action::make('Reject')
                         ->form([
                             Forms\Components\TextArea::make('keterangan')
@@ -242,7 +236,7 @@ class SuratIzinApproveResource extends Resource
                                 ->send();
                         })
                         ->color('danger')
-                        ->hidden(fn ($record) => $record->status > 0),
+                        ->hidden(fn($record) => $record->status > 0),
                 ])
                     ->link()
                     ->label('Actions'),
@@ -260,10 +254,6 @@ class SuratIzinApproveResource extends Resource
                                     'status' => 1,
                                     'keterangan' => null,
                                 ]);
-
-                                SuratIzinApproveDua::create([
-                                    'surat_izin_approve_id' => $record->id,
-                                ]);
                             }
 
 
@@ -277,7 +267,7 @@ class SuratIzinApproveResource extends Resource
                 ]),
             ])
             ->checkIfRecordIsSelectableUsing(
-                fn (SuratIzinApprove $record): int => $record->status === 0,
+                fn(SuratIzinApprove $record): int => $record->status === 0,
             )
             ->query(function (SuratIzinApprove $query) {
                 return $query->whereHas('suratIzin.user', function ($query) {
@@ -306,10 +296,10 @@ class SuratIzinApproveResource extends Resource
                                 ViewEntry::make('status')
                                     ->label('Status Satu')
                                     ->view('infolists.components.status-surat-izin'),
-                                ViewEntry::make('suratIzinApproveDua.status')
+                                ViewEntry::make('suratIzin.suratIzinApproveDua.status')
                                     ->view('infolists.components.status-surat-izin')
                                     ->label('Status Dua'),
-                                ViewEntry::make('suratIzinApproveDua.suratIzinApproveTiga.status')
+                                ViewEntry::make('suratIzin.suratIzinApproveTiga.status')
                                     ->view('infolists.components.status-surat-izin')
                                     ->label('Status Tiga'),
                             ])->columns(3),
@@ -317,7 +307,7 @@ class SuratIzinApproveResource extends Resource
                             ->schema([
                                 TextEntry::make('keterangan')
                                     ->hiddenlabel(),
-                            ])->visible(fn ($record) => $record->keterangan),
+                            ])->visible(fn($record) => $record->keterangan),
                     ]),
                 Section::make()
                     ->schema([
@@ -354,7 +344,7 @@ class SuratIzinApproveResource extends Resource
                             ->time('H:i'),
                     ])
                     ->columns(3)
-                    ->visible(fn (SuratIzinApprove $record): string => $record->suratIzin->lama_izin === '1 Hari' && $record->suratIzin->durasi_izin),
+                    ->visible(fn(SuratIzinApprove $record): string => $record->suratIzin->lama_izin === '1 Hari' && $record->suratIzin->durasi_izin),
 
                 Fieldset::make('Keterangan Izin')
                     ->schema([
@@ -370,7 +360,7 @@ class SuratIzinApproveResource extends Resource
                             ->height(800)
                             ->size(800)
                             ->columnSpanFull(),
-                    ])->visible(fn (SuratIzinApprove $record): string => $record->suratIzin->photo !== null),
+                    ])->visible(fn(SuratIzinApprove $record): string => $record->suratIzin->photo !== null),
             ])
             ->columns(1);
     }

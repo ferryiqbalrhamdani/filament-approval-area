@@ -21,11 +21,6 @@ class SuratIzinApprove extends Model
         return $this->belongsTo(SuratIzin::class);
     }
 
-    public function suratIzinApproveDua()
-    {
-        return $this->hasOne(SuratIzinApproveDua::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);

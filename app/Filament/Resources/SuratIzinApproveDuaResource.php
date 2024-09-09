@@ -60,58 +60,58 @@ class SuratIzinApproveDuaResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.user.first_name')
+                Tables\Columns\TextColumn::make('suratIzin.user.first_name')
                     ->label('Nama User')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.keperluan_izin')
+                Tables\Columns\TextColumn::make('suratIzin.keperluan_izin')
                     ->label('Keperluan Izin')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.lama_izin')
+                Tables\Columns\TextColumn::make('suratIzin.lama_izin')
                     ->label('Lama Izin')
                     ->toggleable(isToggledHiddenByDefault: false)
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.tanggal_izin')
+                Tables\Columns\TextColumn::make('suratIzin.tanggal_izin')
                     ->label('Tgl. Izin')
                     ->date()
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.sampai_tanggal')
+                Tables\Columns\TextColumn::make('suratIzin.sampai_tanggal')
                     ->label('Sampai Tgl. Izin')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->date()
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.durasi_izin')
+                Tables\Columns\TextColumn::make('suratIzin.durasi_izin')
                     ->label('Durasi Izin')
                     ->toggleable()
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.jam_izin')
+                Tables\Columns\TextColumn::make('suratIzin.jam_izin')
                     ->label('Jam Izin')
                     ->toggleable()
                     ->sortable()
                     ->time('H:i'),
-                Tables\Columns\TextColumn::make('suratIzinApprove.suratIzin.sampai_jam')
+                Tables\Columns\TextColumn::make('suratIzin.sampai_jam')
                     ->label('Sampai Jam')
                     ->toggleable()
                     ->sortable()
                     ->time('H:i'),
-                ViewColumn::make('suratIzinApprove.status')
+                ViewColumn::make('suratIzin.suratIzinApprove.status')
                     ->view('tables.columns.status-surat-izin')
                     ->label('Status Satu')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
                 ViewColumn::make('status')
-                    ->view('tables.columns.status-surat-izin')
                     ->label('Status Dua')
+                    ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
-                ViewColumn::make('suratIzinApproveTiga.status')
+                ViewColumn::make('suratIzin.suratIzinApproveTiga.status')
                     ->label('Status Tiga')
                     ->view('tables.columns.status-surat-izin')
                     ->alignment(Alignment::Center)
@@ -120,7 +120,6 @@ class SuratIzinApproveDuaResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                // Filter berdasarkan rentang tanggal
                 Tables\Filters\Filter::make('tanggal_izin')
                     ->form([
                         Forms\Components\DatePicker::make('start_date')
@@ -133,13 +132,13 @@ class SuratIzinApproveDuaResource extends Resource
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when($data['start_date'], function ($query, $start) {
-                                $query->whereHas('suratIzinApprove.suratIzin', function ($query) use ($start) {
-                                    $query->whereDate('tanggal_izin', '>=', $start);
+                                $query->whereHas('suratIzin', function ($query) use ($start) {
+                                    $query->whereDate('tb_izin.tanggal_izin', '>=', $start);
                                 });
                             })
                             ->when($data['end_date'], function ($query, $end) {
-                                $query->whereHas('suratIzinApprove.suratIzin', function ($query) use ($end) {
-                                    $query->whereDate('tanggal_izin', '<=', $end);
+                                $query->whereHas('suratIzin', function ($query) use ($end) {
+                                    $query->whereDate('tb_izin.tanggal_izin', '<=', $end);
                                 });
                             });
                     })
@@ -169,7 +168,7 @@ class SuratIzinApproveDuaResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         if (isset($data['tanggal_izin']) && $data['tanggal_izin'] === 1) {
-                            $query->whereHas('suratIzinApprove.suratIzin', function ($query) use ($data) {
+                            $query->whereHas('suratIzin', function ($query) use ($data) {
                                 $query->whereYear('tanggal_izin', Carbon::now()->year);
                             });
                         }
@@ -183,8 +182,7 @@ class SuratIzinApproveDuaResource extends Resource
 
                         return $indicators;
                     }),
-
-                // Tambahkan filter lainnya sesuai kebutuhan...
+                // Filter lainnya...
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -196,9 +194,7 @@ class SuratIzinApproveDuaResource extends Resource
                         ->requiresConfirmation()
                         ->action(function (SuratIzinApproveDua $record, array $data): void {
                             // Hapus data di SuratIzinApproveDua jika ada dan statusnya 0
-                            $record->suratIzinApproveTiga()
-                                ->where('status', 0)
-                                ->delete();
+
 
                             $record->update([
                                 'status' => 0,
@@ -210,7 +206,7 @@ class SuratIzinApproveDuaResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn ($record) => $record->status > 0 && $record->suratIzinApproveTiga && $record->suratIzinApproveTiga->status === 0),
+                        ->visible(fn($record) => $record->status > 0),
                     Tables\Actions\Action::make('Approve')
                         ->requiresConfirmation()
                         ->icon('heroicon-o-check-circle')
@@ -220,17 +216,13 @@ class SuratIzinApproveDuaResource extends Resource
                                 'user_id' => Auth::user()->id,
                             ]);
 
-                            $record->suratIzinApproveTiga()->create([
-                                'surat_izin_approve_dua_id' => $record->id,
-                            ]);
-
                             Notification::make()
                                 ->title('Data berhasil di Approve')
                                 ->success()
                                 ->send();
                         })
                         ->color('success')
-                        ->hidden(fn ($record) => $record->status > 0),
+                        ->hidden(fn($record) => $record->status > 0),
                     Tables\Actions\Action::make('Reject')
                         ->form([
                             Forms\Components\TextArea::make('keterangan')
@@ -252,7 +244,7 @@ class SuratIzinApproveDuaResource extends Resource
                                 ->send();
                         })
                         ->color('danger')
-                        ->hidden(fn ($record) => $record->status > 0),
+                        ->hidden(fn($record) => $record->status > 0),
                 ])
                     ->link()
                     ->label('Actions'),
@@ -270,7 +262,6 @@ class SuratIzinApproveDuaResource extends Resource
                                     'status' => 1,
                                     'keterangan' => null,
                                 ]);
-                                $record->suratIzinApproveTiga()->create();
                             }
 
 
@@ -284,10 +275,10 @@ class SuratIzinApproveDuaResource extends Resource
                 ]),
             ])
             ->checkIfRecordIsSelectableUsing(
-                fn (SuratIzinApproveDua $record): int => $record->status === 0,
+                fn(SuratIzinApproveDua $record): int => $record->status === 0,
             )
             ->query(function (SuratIzinApproveDua $query) {
-                return $query->whereHas('suratIzinApprove.suratIzin.user', function ($query) {
+                return $query->whereHas('suratIzin.user', function ($query) {
                     $query->where('company_id', Auth::user()->company_id);
                 });
             })
@@ -303,20 +294,20 @@ class SuratIzinApproveDuaResource extends Resource
                     ->schema([
                         Fieldset::make('Informasi User')
                             ->schema([
-                                TextEntry::make('suratIzinApprove.suratIzin.user.full_name')
+                                TextEntry::make('suratIzin.user.full_name')
                                     ->label('Nama Lengkap'),
-                                TextEntry::make('suratIzinApprove.suratIzin.user.company.name')
+                                TextEntry::make('suratIzin.user.company.name')
                                     ->label('Perusahaan'),
                             ]),
                         Fieldset::make('Status')
                             ->schema([
-                                ViewEntry::make('suratIzinApprove.status')
+                                ViewEntry::make('suratIzin.suratIzinApprove.status')
                                     ->label('Status Satu')
                                     ->view('infolists.components.status-surat-izin'),
                                 ViewEntry::make('status')
                                     ->view('infolists.components.status-surat-izin')
                                     ->label('Status Dua'),
-                                ViewEntry::make('suratIzinApproveTiga.status')
+                                ViewEntry::make('suratIzin.suratIzinApproveTiga.status')
                                     ->view('infolists.components.status-surat-izin')
                                     ->label('Status Tiga'),
                             ])->columns(3),
@@ -324,11 +315,11 @@ class SuratIzinApproveDuaResource extends Resource
                             ->schema([
                                 TextEntry::make('keterangan')
                                     ->hiddenlabel(),
-                            ])->visible(fn ($record) => $record->keterangan),
+                            ])->visible(fn($record) => $record->keterangan),
                     ]),
                 Section::make()
                     ->schema([
-                        TextEntry::make('suratIzinApprove.suratIzin.keperluan_izin')
+                        TextEntry::make('suratIzin.keperluan_izin')
                             ->label('Keperluan Izin')
                             ->badge()
                             ->color('info')
@@ -336,13 +327,13 @@ class SuratIzinApproveDuaResource extends Resource
                     ]),
                 Fieldset::make('Tanggal')
                     ->schema([
-                        TextEntry::make('suratIzinApprove.suratIzin.lama_izin')
+                        TextEntry::make('suratIzin.lama_izin')
                             ->label('Lama Izin')
                             ->badge(),
-                        TextEntry::make('suratIzinApprove.suratIzin.tanggal_izin')
+                        TextEntry::make('suratIzin.tanggal_izin')
                             ->label('Tgl. Izin')
                             ->date(),
-                        TextEntry::make('suratIzinApprove.suratIzin.sampai_tanggal')
+                        TextEntry::make('suratIzin.sampai_tanggal')
                             ->label('Sampai Tgl. Izin')
                             ->date(),
                     ])
@@ -350,34 +341,34 @@ class SuratIzinApproveDuaResource extends Resource
 
                 Fieldset::make('Lama Izin')
                     ->schema([
-                        TextEntry::make('suratIzinApprove.suratIzin.durasi_izin')
+                        TextEntry::make('suratIzin.durasi_izin')
                             ->label('Durasi')
                             ->label('Durasi'),
-                        TextEntry::make('suratIzinApprove.suratIzin.jam_izin')
+                        TextEntry::make('suratIzin.jam_izin')
                             ->label('Jam Izin')
                             ->time('H:i'),
-                        TextEntry::make('suratIzinApprove.suratIzin.sampai_jam')
+                        TextEntry::make('suratIzin.sampai_jam')
                             ->label('Sampai Jam')
                             ->time('H:i'),
                     ])
                     ->columns(3)
-                    ->visible(fn (SuratIzinApproveDua $record): string => $record->suratIzinApprove->suratIzin->lama_izin === '1 Hari' && $record->suratIzinApprove->suratIzin->durasi_izin),
+                    ->visible(fn(SuratIzinApproveDua $record): string => $record->suratIzin->lama_izin === '1 Hari' && $record->suratIzin->durasi_izin),
 
                 Fieldset::make('Keterangan Izin')
                     ->schema([
-                        TextEntry::make('suratIzinApprove.suratIzin.keterangan_izin')
+                        TextEntry::make('suratIzin.keterangan_izin')
                             ->hiddenlabel()
                             ->columnSpanFull(),
                     ]),
                 Fieldset::make('Bukti Foto')
                     ->schema([
-                        ImageEntry::make('suratIzinApprove.suratIzin.photo')
+                        ImageEntry::make('suratIzin.photo')
                             ->hiddenlabel()
                             ->width(800)
                             ->height(800)
                             ->size(800)
                             ->columnSpanFull(),
-                    ])->visible(fn (SuratIzinApproveDua $record): string => $record->suratIzinApprove->suratIzin->photo !== null),
+                    ])->visible(fn(SuratIzinApproveDua $record): string => $record->suratIzin->photo !== null),
             ])
             ->columns(1);
     }
@@ -404,7 +395,7 @@ class SuratIzinApproveDuaResource extends Resource
         $modelClass = static::$model;
 
         $count = $modelClass::where('status', 0)
-            ->whereHas('suratIzinApprove.suratIzin.user', function (Builder $query) {
+            ->whereHas('suratIzin.user', function (Builder $query) {
                 $query->where('company_id', Auth::user()->company_id);
             })
             ->count();

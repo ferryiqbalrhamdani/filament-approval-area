@@ -26,15 +26,6 @@ class SuratIzin extends Model
         'status_izin',
     ];
 
-    public static function boot()
-    {
-        parent::boot();
-
-        static::deleting(function ($suratIzin) {
-            $suratIzin->suratIzinApprove()->delete();
-        });
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -44,6 +35,17 @@ class SuratIzin extends Model
     {
         return $this->hasOne(SuratIzinApprove::class);
     }
+
+    public function suratIzinApproveDua()
+    {
+        return $this->hasOne(SuratIzinApproveDua::class);
+    }
+
+    public function suratIzinApproveTiga()
+    {
+        return $this->hasOne(SuratIzinApproveTiga::class);
+    }
+
 
     public function company()
     {

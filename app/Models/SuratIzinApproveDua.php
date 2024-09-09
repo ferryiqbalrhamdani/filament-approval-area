@@ -11,7 +11,6 @@ class SuratIzinApproveDua extends Model
 
     protected $fillable = [
         'surat_izin_id',
-        'surat_izin_approve_id',
         'user_id',
         'status',
         'keterangan',
@@ -20,11 +19,6 @@ class SuratIzinApproveDua extends Model
     public function suratIzin()
     {
         return $this->belongsTo(SuratIzin::class);
-    }
-
-    public function suratIzinApprove()
-    {
-        return $this->belongsTo(SuratIzinApprove::class);
     }
 
     public function user()

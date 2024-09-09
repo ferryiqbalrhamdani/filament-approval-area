@@ -10,15 +10,15 @@ class SuratIzinApproveTiga extends Model
     use HasFactory;
 
     protected $fillable = [
-        'surat_izin_approve_dua_id',
+        'surat_izin_id',
         'user_id',
         'status',
         'keterangan',
     ];
 
-    public function suratIzinApproveDua()
+    public function suratIzin()
     {
-        return $this->belongsTo(SuratIzinApproveDua::class);
+        return $this->belongsTo(SuratIzin::class);
     }
 
     public function user()

@@ -26,45 +26,45 @@ class ListSuratIzinApproveDuas extends ListRecords
 
         return [
             null => Tab::make('All')
-                ->badge(fn () => SuratIzinApproveDua::whereHas('suratIzinApprove.suratIzin.user', function ($query) use ($companyId) {
+                ->badge(fn() => SuratIzinApproveDua::whereHas('suratIzin.user', function ($query) use ($companyId) {
                     $query->where('company_id', $companyId);
                 })->count()),
 
             'processing' => Tab::make('Processing')
                 ->query(
-                    fn ($query) => $query->where('status', 0)
-                        ->whereHas('suratIzinApprove.suratIzin.user', function ($query) use ($companyId) {
+                    fn($query) => $query->where('status', 0)
+                        ->whereHas('suratIzin.user', function ($query) use ($companyId) {
                             $query->where('company_id', $companyId);
                         })
                 )
-                ->badge(fn () => SuratIzinApproveDua::where('status', 0)
-                    ->whereHas('suratIzinApprove.suratIzin.user', function ($query) use ($companyId) {
+                ->badge(fn() => SuratIzinApproveDua::where('status', 0)
+                    ->whereHas('suratIzin.user', function ($query) use ($companyId) {
                         $query->where('company_id', $companyId);
                     })
                     ->count()),
 
             'approved' => Tab::make('Approved')
                 ->query(
-                    fn ($query) => $query->where('status', 1)
-                        ->whereHas('suratIzinApprove.suratIzin.user', function ($query) use ($companyId) {
+                    fn($query) => $query->where('status', 1)
+                        ->whereHas('suratIzin.user', function ($query) use ($companyId) {
                             $query->where('company_id', $companyId);
                         })
                 )
-                ->badge(fn () => SuratIzinApproveDua::where('status', 1)
-                    ->whereHas('suratIzinApprove.suratIzin.user', function ($query) use ($companyId) {
+                ->badge(fn() => SuratIzinApproveDua::where('status', 1)
+                    ->whereHas('suratIzin.user', function ($query) use ($companyId) {
                         $query->where('company_id', $companyId);
                     })
                     ->count()),
 
             'rejected' => Tab::make('Rejected')
                 ->query(
-                    fn ($query) => $query->where('status', 2)
-                        ->whereHas('suratIzinApprove.suratIzin.user', function ($query) use ($companyId) {
+                    fn($query) => $query->where('status', 2)
+                        ->whereHas('suratIzin.user', function ($query) use ($companyId) {
                             $query->where('company_id', $companyId);
                         })
                 )
-                ->badge(fn () => SuratIzinApproveDua::where('status', 2)
-                    ->whereHas('suratIzinApprove.suratIzin.user', function ($query) use ($companyId) {
+                ->badge(fn() => SuratIzinApproveDua::where('status', 2)
+                    ->whereHas('suratIzin.user', function ($query) use ($companyId) {
                         $query->where('company_id', $companyId);
                     })
                     ->count()),

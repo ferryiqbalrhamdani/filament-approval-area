@@ -92,7 +92,13 @@ class CreateSuratIzin extends CreateRecord
     {
         $suratIzin = $this->record;
 
-        SuratIzinApprove::create([
+        $suratIzin->suratIzinApprove()->create([
+            'surat_izin_id' => $suratIzin->id,
+        ]);
+        $suratIzin->suratIzinApproveDua()->create([
+            'surat_izin_id' => $suratIzin->id,
+        ]);
+        $suratIzin->suratIzinApproveTiga()->create([
             'surat_izin_id' => $suratIzin->id,
         ]);
 
