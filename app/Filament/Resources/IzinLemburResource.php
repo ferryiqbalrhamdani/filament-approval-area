@@ -173,10 +173,10 @@ class IzinLemburResource extends Resource
                     Tables\Actions\ViewAction::make()
                         ->label('Lihat Detail'),
                     Tables\Actions\EditAction::make()
-                        ->action(fn($record) => $record->IzinLemburApprove->status == 0)
-                        ->visible(fn($record) => $record->IzinLemburApprove->status == 0),
+                        ->action(fn($record) => $record->IzinLemburApprove->status == 0 && $record->IzinLemburApprove->IzinLemburApproveDua->status == 0 && $record->IzinLemburApprove->IzinLemburApproveDua->IzinLemburApproveTiga->status == 0)
+                        ->visible(fn($record) => $record->IzinLemburApprove->status == 0 && $record->IzinLemburApprove->IzinLemburApproveDua->status == 0 && $record->IzinLemburApprove->IzinLemburApproveDua->IzinLemburApproveTiga->status == 0),
                     Tables\Actions\DeleteAction::make()
-                        ->visible(fn($record) => $record->IzinLemburApprove->status == 0),
+                        ->visible(fn($record) => $record->IzinLemburApprove->status == 0 && $record->IzinLemburApprove->IzinLemburApproveDua->status == 0 && $record->IzinLemburApprove->IzinLemburApproveDua->IzinLemburApproveTiga->status == 0),
                 ])
                     ->link()
                     ->label('Actions'),
@@ -187,7 +187,7 @@ class IzinLemburResource extends Resource
                 ]),
             ])
             ->checkIfRecordIsSelectableUsing(
-                fn(IzinLembur $record): int => $record->izinLemburApprove->status === 0,
+                fn(IzinLembur $record): int => $record->izinLemburApprove->status === 0 && $record->IzinLemburApprove->IzinLemburApproveDua->status === 0 && $record->IzinLemburApprove->IzinLemburApproveDua->IzinLemburApproveTiga->status === 0,
             )
             ->query(
                 fn(IzinLembur $query) => $query->where('user_id', Auth::id())

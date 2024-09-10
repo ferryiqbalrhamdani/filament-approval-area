@@ -179,7 +179,7 @@ class IzinLemburApproveDuaResource extends Resource
                                 'keterangan' => null,
                                 'user_id' => Auth::user()->id,
                             ]);
-                            $record->izinLemburApproveTiga()->delete();
+
                             Notification::make()
                                 ->title('Data berhasil di kembalikan')
                                 ->success()
@@ -196,7 +196,6 @@ class IzinLemburApproveDuaResource extends Resource
                                 'user_id' => Auth::user()->id,
                             ]);
 
-                            $record->izinLemburApproveTiga()->create();
 
                             Notification::make()
                                 ->title('Data berhasil di Approve')
@@ -219,6 +218,7 @@ class IzinLemburApproveDuaResource extends Resource
                                 'status' => 2,
                                 'keterangan' => $data['keterangan'],
                             ]);
+
                             Notification::make()
                                 ->title('Data berhasil di Reject')
                                 ->success()
@@ -254,7 +254,6 @@ class IzinLemburApproveDuaResource extends Resource
                                     'status' => 1,
                                     'keterangan' => null,
                                 ]);
-                                $record->izinLemburApproveTiga()->create();
                             }
 
                             Notification::make()

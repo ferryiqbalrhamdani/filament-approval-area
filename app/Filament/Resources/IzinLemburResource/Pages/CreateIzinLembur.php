@@ -68,13 +68,24 @@ class CreateIzinLembur extends CreateRecord
 
     protected function afterCreate(): void
     {
-
         $izinLembur = $this->record;
 
-        IzinLemburApprove::create([
+        // Step 1: Create the first approval stage (izinLemburApprove) linked to izinLembur
+        $izinApprove = $izinLembur->izinLemburApprove()->create([
             'izin_lembur_id' => $izinLembur->id,
         ]);
 
+        // Step 2: Create the second approval stage (izinLemburApproveDua) linked to izinLemburApprove
+        $izinApproveDua = $izinApprove->izinLemburApproveDua()->create([
+            'izin_lembur_approve_id' => $izinApprove->id,
+        ]);
+
+        // Step 3: Create the third approval stage (izinLemburApproveTiga) linked to izinLemburApproveDua and izinLemburApprove
+        $izinApproveDua->izinLemburApproveTiga()->create([
+            'izin_lembur_approve_dua_id' => $izinApproveDua->id,
+        ]);
+
+        // Redirect after successful creation
         $this->redirect($this->getRedirectUrl());
     }
 }

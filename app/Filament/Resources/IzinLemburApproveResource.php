@@ -172,9 +172,6 @@ class IzinLemburApproveResource extends Resource
                         ->requiresConfirmation()
                         ->action(function (IzinLemburApprove $record, array $data): void {
                             // Hapus data di izinLemburApproveDua jika ada dan statusnya 0
-                            $record->izinLemburApproveDua()
-                                ->where('status', 0)
-                                ->delete();
 
                             $record->update([
                                 'status' => 0,
@@ -195,8 +192,6 @@ class IzinLemburApproveResource extends Resource
                                 'status' => 1,
                                 'user_id' => Auth::user()->id,
                             ]);
-
-                            $record->izinLemburApproveDua()->create();
 
 
                             // $record->izinLemburApproveDua()->create([
@@ -260,7 +255,6 @@ class IzinLemburApproveResource extends Resource
                                     'status' => 1,
                                     'keterangan' => null,
                                 ]);
-                                $record->izinLemburApproveDua()->create();
                             }
 
 
