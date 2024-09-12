@@ -4,6 +4,7 @@ namespace App\Filament\Clusters\IzinCuti\Resources\CutiKhususResource\Pages;
 
 use App\Filament\Clusters\IzinCuti\Resources\CutiKhususResource;
 use App\Models\IzinCutiApprove;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
@@ -72,7 +73,8 @@ class CreateCutiKhusus extends CreateRecord
     {
         $cutiKhusus = $this->record;
 
-        IzinCutiApprove::create([
+        // Step 1: Create the first approval stage (cutiKhususApprove) linked to cutiKhusus
+        $cutiKhusus = $cutiKhusus->izinCutiApprove()->create([
             'cuti_khusus_id' => $cutiKhusus->id,
             'keterangan_cuti' => 'Cuti Khusus',
             'user_cuti_id' => Auth::user()->id,
@@ -83,6 +85,16 @@ class CreateCutiKhusus extends CreateRecord
             'sampai_cuti' => $cutiKhusus->sampai_cuti,
             'pesan_cuti' => $cutiKhusus->keterangan_cuti,
 
+        ]);
+
+        // Step 2: Create the second approval stage (cutiKhususApproveDua) linked to cutiKhususApprove
+        $cutiKhususDua = $cutiKhusus->izinCutiApproveDua()->create([
+            'cuti_khusus_approve_id' => $cutiKhusus->id,
+        ]);
+
+        // Step 3: Create the third approval stage (cutiKhususApproveTiga) linked to cutiKhususApproveDua and cutiKhususApprove
+        $cutiKhususDua->izinCutiApproveTiga()->create([
+            'cuti_khusus_approve_dua_id' => $cutiKhususDua->id,
         ]);
 
         // $this->redirect($this->getRedirectUrl());

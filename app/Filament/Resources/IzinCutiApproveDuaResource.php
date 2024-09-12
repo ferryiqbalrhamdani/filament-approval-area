@@ -7,14 +7,20 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use App\Models\IzinCutiApproveDua;
 use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Infolists\Components\Group;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Infolists\Components\Section;
 use Filament\Tables\Enums\ActionsPosition;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\IzinCutiApproveDuaResource\Pages;
 use App\Filament\Resources\IzinCutiApproveDuaResource\RelationManagers;
@@ -165,9 +171,6 @@ class IzinCutiApproveDuaResource extends Resource
                                 'user_id' => Auth::user()->id,
                             ]);
 
-                            $record->IzinCutiApproveTiga()
-                                ->where('status', 0)
-                                ->delete();
 
                             Notification::make()
                                 ->title('Data berhasil di kembalikan')
@@ -186,9 +189,6 @@ class IzinCutiApproveDuaResource extends Resource
                             ]);
 
                             // Create the related IzinCutiApproveDua record with the correct foreign key
-                            $record->izinCutiApproveTiga()->create([
-                                'izin_cuti_approve_dua_id' => $record->id,  // Correctly reference the current record's ID
-                            ]);
 
                             // Send success notification
                             Notification::make()
@@ -238,10 +238,6 @@ class IzinCutiApproveDuaResource extends Resource
                                     'status' => 1,
                                     'keterangan' => null,
                                 ]);
-
-                                $record->izinCutiApproveTiga()->create([
-                                    'izin_cuti_approve_id' => $record->id,  // Correctly reference the current record's ID
-                                ]);
                             }
 
 
@@ -264,6 +260,105 @@ class IzinCutiApproveDuaResource extends Resource
                         });
                 });
             });
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Group::make()
+                    ->schema([
+                        Fieldset::make('Status')
+                            ->schema([
+                                ViewEntry::make('izinCutiApprove.status')
+                                    ->label('Status Satu')
+                                    ->view('infolists.components.status-surat-izin'),
+                                ViewEntry::make('status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Dua'),
+                                ViewEntry::make('izinCutiApproveTiga.status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Tiga'),
+                            ])->columns(3),
+                        Group::make()
+                            ->schema([
+                                Fieldset::make('Dibatalkan oleh')
+                                    ->schema([
+                                        TextEntry::make('izinCutiApprove.user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveDua $record) => optional(optional($record)->izinCutiApprove)->status === 2),
+                                        TextEntry::make('user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveDua $record) => optional($record)->status === 2),
+                                        TextEntry::make('izinCutiApproveTiga.user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveDua $record) => optional(optional($record)->izinCutiApproveTiga)->status === 2),
+                                    ])
+                                    ->columnSpan(1), // Kolom kecil untuk "Dibatalkan oleh"
+                                Fieldset::make('Keterangan')
+                                    ->schema([
+                                        TextEntry::make('izinCutiApprove.keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveDua $record) => optional(optional($record)->izinCutiApprove)->status === 2),
+
+                                        TextEntry::make('keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveDua $record) => optional($record)->status === 2),
+                                        TextEntry::make('izinCutiApproveTiga.keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveDua $record) => optional(optional($record)->izinCutiApproveTiga)->status === 2),
+                                    ])
+                                    ->columnSpan(3), // Kolom lebih lebar untuk "Keterangan"
+                            ])
+                            ->columns(4) // Set kolom menjadi 4 untuk membuat mereka sejajar
+                            ->visible(
+                                fn(IzinCutiApproveDua $record) =>
+                                optional(optional($record)->izinCutiApprove)->status === 2 ||
+                                    optional($record)->status === 2 ||
+                                    optional(optional($record)->izinCutiApproveTiga)->status === 2
+                            ),
+                        Section::make()
+                            ->schema([
+                                TextEntry::make('izinCutiApprove.pilihan_cuti')
+                                    ->badge()
+                                    ->color('info')
+                                    ->columnSpanFull(),
+                            ])
+                            ->visible(fn(IzinCutiApproveDua $record) => optional(optional($record)->izinCutiApprove)->keterangan_cuti === 'Cuti Khusus'),
+                        Fieldset::make('Tanggal')
+                            ->schema([
+                                TextEntry::make('izinCutiApprove.mulai_cuti')
+                                    ->date(),
+                                TextEntry::make('izinCutiApprove.sampai_cuti')
+                                    ->date(),
+                                TextEntry::make('izinCutiApprove.lama_cuti')
+                                    ->badge(),
+                            ])
+                            ->columns(3),
+                        Fieldset::make('Keterangan Cuti')
+                            ->schema([
+                                TextEntry::make('izinCutiApprove.pesan_cuti')
+                                    ->hiddenlabel()
+                                    ->columnSpanFull(),
+                            ]),
+                    ]),
+            ])
+            ->columns(1);
     }
 
     public static function getRelations(): array

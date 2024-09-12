@@ -7,14 +7,20 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use App\Models\IzinCutiApproveTiga;
 use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Infolists\Components\Group;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Infolists\Components\Section;
 use Filament\Tables\Enums\ActionsPosition;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\IzinCutiApproveTigaResource\Pages;
 use App\Filament\Resources\IzinCutiApproveTigaResource\RelationManagers;
@@ -175,6 +181,7 @@ class IzinCutiApproveTigaResource extends Resource
             ])
             ->recordAction(null)
             ->recordUrl(null)
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\ActionGroup::make([
 
@@ -186,13 +193,35 @@ class IzinCutiApproveTigaResource extends Resource
                         ->action(function (IzinCutiApproveTiga $record, array $data): void {
                             $izinCuti = $record->izinCutiApproveDua->izinCutiApprove;
 
-                            if ($izinCuti->keterangan_cuti == 'Cuti Pribadi') {
-                                $lamaCuti = explode(' ', $izinCuti->lama_cuti);
-                                $sisaCuti = $izinCuti->userCuti->cuti + (int)$lamaCuti[0];
+                            $leaveMonth = \Carbon\Carbon::parse($izinCuti->tanggal_mulai)->format('Y-m');
+                            $currentMonth = now()->format('Y-m');
+                            if ($leaveMonth > $currentMonth) {
+                                Notification::make()
+                                    ->title('Error')
+                                    ->body('Cuti tidak dapat dikembalikan karena tanggal cuti melewati bulan ini.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
 
-                                $izinCuti->userCuti->update([
-                                    'cuti' => $sisaCuti,
-                                ]);
+                            if ($izinCuti->keterangan_cuti == 'Cuti Pribadi') {
+                                if ($record->status == 2) {
+                                    $lamaCuti = explode(' ', $izinCuti->lama_cuti);
+                                    $sisaCuti = $izinCuti->userCuti->cuti - (int)$lamaCuti[0];
+
+                                    if ($sisaCuti > 6) {
+                                        Notification::make()
+                                            ->title('Error')
+                                            ->body('Jumlah izin cuti melebihi batas maksimal 6 hari.')
+                                            ->danger()
+                                            ->send();
+                                        return;
+                                    }
+
+                                    $izinCuti->userCuti->update([
+                                        'cuti' => $sisaCuti,
+                                    ]);
+                                }
                             }
 
                             $record->update([
@@ -215,8 +244,7 @@ class IzinCutiApproveTigaResource extends Resource
 
                             if ($izinCuti->keterangan_cuti == 'Cuti Pribadi') {
                                 if ($izinCuti->userCuti->cuti > 0) {
-                                    $lamaCuti = explode(' ', $izinCuti->lama_cuti);
-                                    $sisaCuti = $izinCuti->userCuti->cuti - (int)$lamaCuti[0];
+                                    $sisaCuti = $izinCuti->userCuti->cuti;
 
                                     if ($sisaCuti < 0) {
                                         Notification::make()
@@ -268,11 +296,46 @@ class IzinCutiApproveTigaResource extends Resource
                         ->requiresConfirmation()
                         ->icon('heroicon-o-x-circle')
                         ->action(function (IzinCutiApproveTiga $record, array $data): void {
+                            $izinCuti = $record->izinCutiApproveDua->izinCutiApprove;
+
+                            // Check if the leave date is beyond the current month
+                            $leaveMonth = \Carbon\Carbon::parse($izinCuti->tanggal_mulai)->format('Y-m');
+                            $currentMonth = now()->format('Y-m');
+                            if ($leaveMonth > $currentMonth) {
+                                Notification::make()
+                                    ->title('Error')
+                                    ->body('Cuti tidak dapat di-reject karena tanggal cuti melewati bulan ini.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            // Calculate leave and check if it exceeds 6 days
+                            if ($izinCuti->keterangan_cuti == 'Cuti Pribadi') {
+                                $lamaCuti = explode(' ', $izinCuti->lama_cuti);
+                                $sisaCuti = $izinCuti->userCuti->cuti + (int)$lamaCuti[0];
+
+                                if ($sisaCuti > 6) {
+                                    Notification::make()
+                                        ->title('Error')
+                                        ->body('Jumlah izin cuti melebihi batas maksimal 6 hari.')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
+
+                                $izinCuti->userCuti->update([
+                                    'cuti' => $sisaCuti,
+                                ]);
+                            }
+
+                            // Update record after passing all checks
                             $record->update([
                                 'user_id' => Auth::user()->id,
                                 'status' => 2,
                                 'keterangan' => $data['keterangan'],
                             ]);
+
                             Notification::make()
                                 ->title('Data berhasil di Reject')
                                 ->success()
@@ -359,6 +422,107 @@ class IzinCutiApproveTigaResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Group::make()
+                    ->schema([
+                        Fieldset::make('Status')
+                            ->schema([
+                                ViewEntry::make('izinCutiApproveDua.izinCutiApprove.status')
+                                    ->label('Status Satu')
+                                    ->view('infolists.components.status-surat-izin'),
+                                ViewEntry::make('izinCutiApproveDua.status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Dua'),
+                                ViewEntry::make('status')
+                                    ->view('infolists.components.status-surat-izin')
+                                    ->label('Status Tiga'),
+                            ])->columns(3),
+                        Group::make()
+                            ->schema([
+                                Fieldset::make('Dibatalkan oleh')
+                                    ->schema([
+                                        TextEntry::make('izinCutiApproveDua.izinCutiApprove.user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveTiga $record) => optional(optional(optional($record)->izinCutiApproveDua)->izinCutiApprove)->status === 2),
+                                        TextEntry::make('izinCutiApproveDua.user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveTiga $record) => optional(optional($record)->izinCutiApproveDua)->status === 2),
+                                        TextEntry::make('user.first_name')
+                                            ->hiddenLabel()
+                                            ->badge()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveTiga $record) => optional($record)->status === 2),
+                                    ])
+                                    ->columnSpan(1), // Kolom kecil untuk "Dibatalkan oleh"
+                                Fieldset::make('Keterangan')
+                                    ->schema([
+                                        TextEntry::make('izinCutiApproveDua.izinCutiApprove.keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveTiga $record) => optional(optional(optional($record)->izinCutiApproveDua)->izinCutiApprove)->status === 2),
+                                        TextEntry::make('izinCutiApproveDua.keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveTiga $record) => optional(optional($record)->izinCutiApproveDua)->status === 2),
+                                        TextEntry::make('keterangan')
+                                            ->hiddenLabel()
+                                            ->color('danger')
+                                            ->columnSpanFull()
+                                            ->visible(fn(IzinCutiApproveTiga $record) => optional($record)->status === 2),
+                                    ])
+                                    ->columnSpan(3), // Kolom lebih lebar untuk "Keterangan"
+                            ])
+                            ->columns(4) // Set kolom menjadi 4 untuk membuat mereka sejajar
+                            ->visible(
+                                fn(IzinCutiApproveTiga $record) =>
+                                optional(optional($record)->izinCutiApprove)->status === 2 ||
+                                    optional($record)->status === 2 ||
+                                    optional(optional($record)->izinCutiApproveTiga)->status === 2
+                            ),
+                        Section::make()
+                            ->schema([
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.pilihan_cuti')
+                                    ->badge()
+                                    ->color('info')
+                                    ->columnSpanFull(),
+                            ])
+                            ->visible(fn(IzinCutiApproveTiga $record) => optional(optional(optional($record)->izinCutiApproveDua)->izinCutiApprove)->keterangan_cuti === 'Cuti Khusus'),
+                        Fieldset::make('Tanggal')
+                            ->schema([
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.mulai_cuti')
+                                    ->label('Mulai Cuti')
+                                    ->date(),
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.sampai_cuti')
+                                    ->label('Sampai Cuti')
+                                    ->date(),
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.lama_cuti')
+                                    ->label('Lama Cuti')
+                                    ->badge(),
+                            ])
+                            ->columns(3),
+                        Fieldset::make('Keterangan Cuti')
+                            ->schema([
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.pesan_cuti')
+                                    ->hiddenlabel()
+                                    ->columnSpanFull(),
+                            ]),
+                    ]),
+            ])
+            ->columns(1);
     }
 
     public static function getWidgets(): array

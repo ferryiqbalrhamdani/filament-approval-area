@@ -74,6 +74,12 @@ class IzinCutiApproveResource extends Resource
                     ->alignment(Alignment::Center)
                     ->sortable()
                     ->searchable(),
+                ViewColumn::make('izinCutiApproveDua.izinCutiApproveTiga.status')
+                    ->view('tables.columns.status-surat-izin')
+                    ->label('Status Tiga')
+                    ->alignment(Alignment::Center)
+                    ->sortable()
+                    ->searchable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -173,9 +179,6 @@ class IzinCutiApproveResource extends Resource
                         ->requiresConfirmation()
                         ->action(function (IzinCutiApprove $record, array $data): void {
                             // Hapus data di IzinCutiApproveDua jika ada dan statusnya 0
-                            $record->IzinCutiApproveDua()
-                                ->where('status', 0)
-                                ->delete();
 
                             $record->update([
                                 'status' => 0,
@@ -198,17 +201,11 @@ class IzinCutiApproveResource extends Resource
                                     'status' => 1,
                                     'user_id' => Auth::user()->id,
                                 ]);
-                                $record->izinCutiApproveDua()->create([
-                                    'izin_cuti_approve_id' => $record->id,
-                                ]);
                             } elseif (!is_null($record->cuti_khusus_id)) {
                                 // Process Cuti Khusus
                                 $record->update([
                                     'status' => 1,
                                     'user_id' => Auth::user()->id,
-                                ]);
-                                $record->izinCutiApproveDua()->create([
-                                    'izin_cuti_approve_id' => $record->id,
                                 ]);
                             }
 
@@ -260,19 +257,11 @@ class IzinCutiApproveResource extends Resource
                                         'status' => 1,
                                         'keterangan' => null,
                                     ]);
-
-                                    IzinCutiApproveDua::create([
-                                        'izin_cuti_approve_id' => $record->id,
-                                    ]);
                                 } elseif (!is_null($record->cuti_khusus_id)) {
                                     // Process Cuti Khusus
                                     $record->update([
                                         'status' => 1,
                                         'keterangan' => null,
-                                    ]);
-
-                                    IzinCutiApproveDua::create([
-                                        'izin_cuti_approve_id' => $record->id,
                                     ]);
                                 }
                             }
@@ -390,7 +379,7 @@ class IzinCutiApproveResource extends Resource
                             ->columns(3),
                         Fieldset::make('Keterangan Cuti')
                             ->schema([
-                                TextEntry::make('keterangan_cuti')
+                                TextEntry::make('pesan_cuti')
                                     ->hiddenlabel()
                                     ->columnSpanFull(),
                             ]),
