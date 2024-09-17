@@ -99,4 +99,9 @@ class CreateCutiKhusus extends CreateRecord
 
         // $this->redirect($this->getRedirectUrl());
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

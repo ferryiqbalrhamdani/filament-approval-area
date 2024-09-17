@@ -7,21 +7,27 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use App\Models\IzinCutiApproveTiga;
 use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\Alignment;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Infolists\Components\Group;
 use Filament\Notifications\Notification;
+use pxlrbt\FilamentExcel\Columns\Column;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\Section;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Infolists\Components\Fieldset;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
+use Illuminate\Database\Eloquent\Collection;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\IzinCutiApproveTigaResource\Pages;
 use App\Filament\Resources\IzinCutiApproveTigaResource\RelationManagers;
 use App\Filament\Resources\IzinCutiApproveTigaResource\Widgets\IzinCutiApproveTigaStats;
@@ -347,6 +353,11 @@ class IzinCutiApproveTigaResource extends Resource
                     ->link()
                     ->label('Actions'),
             ], position: ActionsPosition::BeforeCells)
+            ->groups([
+                Tables\Grouping\Group::make('izinCutiApproveDua.izinCutiApprove.userCuti.first_name')
+                    ->label('Nama User')
+                    ->collapsible(),
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -409,13 +420,61 @@ class IzinCutiApproveTigaResource extends Resource
                             }
                         })
                         ->deselectRecordsAfterCompletion(),
-
+                    ExportBulkAction::make()
+                        ->label('Eksport Excel')
+                        ->exports([
+                            ExcelExport::make()
+                                ->askForFilename()
+                                ->askForWriterType()
+                                ->withColumns([
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.userCuti.first_name')
+                                        ->heading('Nama User')
+                                        ->formatStateUsing(fn($state, $record) => $record->izinCutiApproveDua->izinCutiApprove->userCuti->first_name . ' ' . $record->izinCutiApproveDua->izinCutiApprove->userCuti->last_name),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.userCuti.company.name')
+                                        ->heading('Perusahaan'),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.userCuti.jk')
+                                        ->heading('Jenis Kelamin'),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.keterangan_cuti')
+                                        ->heading('Keterangan Cuti'),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.pilihan_cuti')
+                                        ->heading('Pilihan Cuti'),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.mulai_cuti')
+                                        ->heading('Mulai Cuti'),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.sampai_cuti')
+                                        ->heading('Sampai Cuti'),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.lama_cuti')
+                                        ->heading('Lama Cuti'),
+                                    Column::make('izinCutiApproveDua.izinCutiApprove.pesan_cuti')
+                                        ->heading('Pesan Cuti'),
+                                    Column::make('status')
+                                        ->heading('Status')
+                                        ->formatStateUsing(fn($state) => $state === 0 ? 'Diproses' : ($state === 1 ? 'Disetujui' : 'Ditolak')),
+                                    Column::make('keterangan')
+                                        ->heading('Keterangan'),
+                                ])
+                        ]),
+                    BulkAction::make('export_pdf')
+                        ->label('Export PDF')
+                        ->action(function (Collection $records) {
+                            return static::exportToPDF($records);
+                        })
+                        ->icon('heroicon-o-arrow-down-tray'),
                 ]),
-            ])
-            ->checkIfRecordIsSelectableUsing(
-                fn(IzinCutiApproveTiga $record): int => $record->status === 0,
-            );
+            ]);
     }
+
+    public static function exportToPDF(Collection $records)
+    {
+        // Load view dan generate PDF
+        $pdf = Pdf::loadView('pdf.export', ['records' => $records]);
+
+        // Return PDF sebagai response download
+        return response()->streamDownload(
+            fn() => print($pdf->output()),
+            'data-cuti-' . Carbon::now() . '.pdf'
+        );
+    }
+
 
     public static function getRelations(): array
     {
@@ -430,6 +489,13 @@ class IzinCutiApproveTigaResource extends Resource
             ->schema([
                 Group::make()
                     ->schema([
+                        Fieldset::make('Informasi User')
+                            ->schema([
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.userCuti.full_name')
+                                    ->label('Nama Lengkap'),
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.userCuti.company.name')
+                                    ->label('Perusahaan'),
+                            ]),
                         Fieldset::make('Status')
                             ->schema([
                                 ViewEntry::make('izinCutiApproveDua.izinCutiApprove.status')
@@ -495,7 +561,16 @@ class IzinCutiApproveTigaResource extends Resource
                             ),
                         Section::make()
                             ->schema([
+                                TextEntry::make('izinCutiApproveDua.izinCutiApprove.keterangan_cuti')
+                                    ->label('Keterangan Cuti')
+                                    ->badge()
+                                    ->color('gray')
+                                    ->columnSpanFull(),
+                            ]),
+                        Section::make()
+                            ->schema([
                                 TextEntry::make('izinCutiApproveDua.izinCutiApprove.pilihan_cuti')
+                                    ->label('Pilihan Cuti')
                                     ->badge()
                                     ->color('info')
                                     ->columnSpanFull(),

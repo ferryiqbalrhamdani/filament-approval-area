@@ -97,4 +97,9 @@ class CreateCutiPribadi extends CreateRecord
         // Redirect setelah berhasil membuat record
         // $this->redirect($this->getRedirectUrl());
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

@@ -17,7 +17,8 @@ class ListCutiPribadis extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->label('Buat Cuti Pribadi'),
+                ->label('Buat Cuti Pribadi')
+                ->disabled(fn() => Auth::user()->cuti <= 0),
         ];
     }
 

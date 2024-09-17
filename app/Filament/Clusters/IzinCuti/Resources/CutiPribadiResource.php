@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Infolists\Components\Group;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Infolists\Components\Fieldset;
@@ -159,7 +160,27 @@ class CutiPribadiResource extends Resource
                         ->action(fn($record) => $record->izinCutiApprove->status == 0)
                         ->visible(fn($record) => $record->izinCutiApprove->status == 0),
                     Tables\Actions\DeleteAction::make()
-                        ->visible(fn($record) => $record->izinCutiApprove->status == 0),
+                        ->action(function ($record) {
+                            $lamaCuti = explode(' ', $record->lama_cuti);
+                            $cutiUser = $record->user->cuti;
+
+                            $record->user->update([
+                                'cuti' => $cutiUser + (int)$lamaCuti[0],
+                            ]);
+
+                            $record->delete();
+
+                            Notification::make()
+                                ->title('Data berhasil di hapus')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(
+                            fn($record) =>
+                            $record->izinCutiApprove->status == 0 &&
+                                $record->izinCutiApprove->izinCutiApproveDua->status == 0 &&
+                                $record->izinCutiApprove->izinCutiApproveDua->izinCutiApproveTiga->status == 0
+                        ),
                 ])
                     ->link()
                     ->label('Actions'),
@@ -168,7 +189,10 @@ class CutiPribadiResource extends Resource
                 Tables\Actions\DeleteBulkAction::make(),
             ])
             ->checkIfRecordIsSelectableUsing(
-                fn(CutiPribadi $record): int => $record->izinCutiApprove->status === 0,
+                fn(CutiPribadi $record): int =>
+                $record->izinCutiApprove->status == 0 &&
+                    $record->izinCutiApprove->izinCutiApproveDua->status == 0 &&
+                    $record->izinCutiApprove->izinCutiApproveDua->izinCutiApproveTiga->status == 0,
             )
             ->query(
                 fn(CutiPribadi $query) => $query->where('user_id', Auth::id())
