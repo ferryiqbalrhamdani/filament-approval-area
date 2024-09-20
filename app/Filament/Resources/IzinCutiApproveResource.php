@@ -185,6 +185,13 @@ class IzinCutiApproveResource extends Resource
                                 'keterangan' => null,
                                 'user_id' => Auth::user()->id,
                             ]);
+
+                            if ($record->userCuti->user_approve_dua_id == null) {
+                                $record->izinCutiApproveDua->update([
+                                    'status' => 0,
+                                ]);
+                            }
+
                             Notification::make()
                                 ->title('Data berhasil di kembalikan')
                                 ->success()
@@ -195,6 +202,13 @@ class IzinCutiApproveResource extends Resource
                         ->requiresConfirmation()
                         ->icon('heroicon-o-check-circle')
                         ->action(function (IzinCutiApprove $record, array $data): void {
+                            // Approve Data
+                            if ($record->userCuti->user_approve_dua_id == null) {
+                                $record->izinCutiApproveDua->update([
+                                    'status' => 1,
+                                ]);
+                            }
+
                             if (!is_null($record->cuti_pribadi_id)) {
                                 // Process Cuti Pribadi
                                 $record->update([
@@ -231,6 +245,13 @@ class IzinCutiApproveResource extends Resource
                                 'status' => 2,
                                 'keterangan' => $data['keterangan'],
                             ]);
+
+                            if ($record->userCuti->user_approve_dua_id == null) {
+                                $record->izinCutiApproveDua->update([
+                                    'status' => 2,
+                                ]);
+                            }
+
                             Notification::make()
                                 ->title('Data berhasil di Reject')
                                 ->success()
@@ -264,6 +285,12 @@ class IzinCutiApproveResource extends Resource
                                         'keterangan' => null,
                                     ]);
                                 }
+
+                                if ($record->userCuti->user_approve_dua_id == null) {
+                                    $record->izinCutiApproveDua->update([
+                                        'status' => 1,
+                                    ]);
+                                }
                             }
 
                             Notification::make()
@@ -279,13 +306,8 @@ class IzinCutiApproveResource extends Resource
                 fn(IzinCutiApprove $record): int => $record->status === 0,
             )
             ->query(function (IzinCutiApprove $query) {
-                return $query->where(function ($query) {
-                    $query->whereHas('userCuti', function ($query) {
-                        $query->where('company_id', Auth::user()->company_id);
-                    });
-                });
+                return $query->where('user_id', Auth::user()->id);
             })
-
             ->recordAction(null)
             ->recordUrl(null);
     }
@@ -410,14 +432,7 @@ class IzinCutiApproveResource extends Resource
         $modelClass = static::$model;
 
         $count = $modelClass::where('status', 0)
-            ->where(function (Builder $query) {
-                $query->whereHas('cutiKhusus.user', function (Builder $query) {
-                    $query->where('company_id', Auth::user()->company_id);
-                })
-                    ->orWhereHas('cutiPribadi.user', function (Builder $query) {
-                        $query->where('company_id', Auth::user()->company_id);
-                    });
-            })
+            ->where('user_id', Auth::user()->id)
             ->count();
 
         return (string) $count;

@@ -82,11 +82,13 @@ class CreateCutiPribadi extends CreateRecord
             'mulai_cuti' => $cutiPribadi->mulai_cuti,
             'sampai_cuti' => $cutiPribadi->sampai_cuti,
             'pesan_cuti' => $cutiPribadi->keterangan_cuti,
+            'user_id' => Auth::user()->user_approve_id,
         ]);
 
         // Step 2: Membuat persetujuan kedua (izinCutiApproveDua)
         $cutiPribadiApproveDua = $cutiPribadiApprove->izinCutiApproveDua()->create([
             'cuti_pribadi_approve_id' => $cutiPribadiApprove->id,
+            'user_id' => Auth::user()->user_approve_dua_id,
         ]);
 
         // Step 3: Membuat persetujuan ketiga (izinCutiApproveTiga)

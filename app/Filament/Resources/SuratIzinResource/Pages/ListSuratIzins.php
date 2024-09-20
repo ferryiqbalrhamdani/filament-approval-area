@@ -34,80 +34,66 @@ class ListSuratIzins extends ListRecords
             null => Tab::make('All')
                 ->badge(fn() => SuratIzin::where('user_id', $userId)->count()),
 
-            'processing' => Tab::make('Total Processing')
-                ->query(fn($query) => $query->whereHas(
-                    'suratIzinApprove',
-                    fn($q) =>
-                    $q->where('status', 0)
-
+            'proccessing' => Tab::make('Total Proccessing')
+                ->badge(
+                    fn() => SuratIzin::where('user_id', $userId)
+                        ->where(function ($query) {
+                            $query->whereHas('suratIzinApprove', fn($query) => $query->where('status', 0))
+                                ->orWhereHas('suratIzinApproveDua', fn($query) => $query->where('status', 0))
+                                ->orWhereHas('suratIzinApproveTiga', fn($query) => $query->where('status', 0));
+                        })
+                        ->count()
                 )
-                    ->orWhereHas(
-                        'suratIzinApproveDua',
-                        fn($q2) =>
-                        $q2->where('status', 0)
-
-                    )
-                    ->orWhereHas(
-                        'suratIzinApproveTiga',
-                        fn($q3) =>
-                        $q3->where('status', 0)
-                    ))
-                ->badge(fn() => SuratIzin::where('user_id', $userId)
-                    ->whereHas('suratIzinApprove', fn($q1) => $q1->where('status', 0))
-                    ->orWhereHas('suratIzinApproveDua', fn($q2) => $q2->where('status', 0))
-                    ->orWhereHas('suratIzinApproveTiga', fn($q3) => $q3->where('status', 0))
-                    ->count()),
-
-
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query
+                        ->where('user_id', $userId)
+                        ->where(function ($query) {
+                            $query->whereHas('suratIzinApprove', fn($query) => $query->where('status', 0))
+                                ->orWhereHas('suratIzinApproveDua', fn($query) => $query->where('status', 0))
+                                ->orWhereHas('suratIzinApproveTiga', fn($query) => $query->where('status', 0));
+                        })
+                ),
             'approved' => Tab::make('Total Approved')
-                ->query(fn($query) => $query->whereHas(
-                    'suratIzinApprove',
-                    fn($q) =>
-                    $q->where('status', 1)
-
+                ->badge(
+                    fn() => SuratIzin::where('user_id', $userId)
+                        ->where(function ($query) {
+                            $query->whereHas('suratIzinApprove', fn($query) => $query->where('status', 1))
+                                ->orWhereHas('suratIzinApproveDua', fn($query) => $query->where('status', 1))
+                                ->orWhereHas('suratIzinApproveTiga', fn($query) => $query->where('status', 1));
+                        })
+                        ->count()
                 )
-                    ->orWhereHas(
-                        'suratIzinApproveDua',
-                        fn($q2) =>
-                        $q2->where('status', 1)
-
-                    )
-                    ->orWhereHas(
-                        'suratIzinApproveTiga',
-                        fn($q3) =>
-                        $q3->where('status', 1)
-                    ))
-                ->badge(fn() => SuratIzin::where('user_id', $userId)
-                    ->whereHas('suratIzinApprove', fn($q1) => $q1->where('status', 1))
-                    ->orWhereHas('suratIzinApproveDua', fn($q2) => $q2->where('status', 1))
-                    ->orWhereHas('suratIzinApproveTiga', fn($q3) => $q3->where('status', 1))
-                    ->count()),
-
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query
+                        ->where('user_id', $userId)
+                        ->where(function ($query) {
+                            $query->whereHas('suratIzinApprove', fn($query) => $query->where('status', 1))
+                                ->orWhereHas('suratIzinApproveDua', fn($query) => $query->where('status', 1))
+                                ->orWhereHas('suratIzinApproveTiga', fn($query) => $query->where('status', 1));
+                        })
+                ),
             'rejected' => Tab::make('Total Rejected')
-                ->query(fn($query) => $query->whereHas(
-                    'suratIzinApprove',
-                    fn($q) =>
-                    $q->where('status', 2)
-
+                ->badge(
+                    fn() => SuratIzin::where('user_id', $userId)
+                        ->where(function ($query) {
+                            $query->whereHas('suratIzinApprove', fn($query) => $query->where('status', 2))
+                                ->orWhereHas('suratIzinApproveDua', fn($query) => $query->where('status', 2))
+                                ->orWhereHas('suratIzinApproveTiga', fn($query) => $query->where('status', 2));
+                        })
+                        ->count()
                 )
-                    ->orWhereHas(
-                        'suratIzinApproveDua',
-                        fn($q2) =>
-                        $q2->where('status', 2)
-
-                    )
-                    ->orWhereHas(
-                        'suratIzinApproveTiga',
-                        fn($q3) =>
-                        $q3->where('status', 2)
-                    ))
-                ->badge(fn() => SuratIzin::where('user_id', $userId)
-                    ->whereHas('suratIzinApprove', fn($q1) => $q1->where('status', 2))
-                    ->orWhereHas('suratIzinApproveDua', fn($q2) => $q2->where('status', 2))
-                    ->orWhereHas('suratIzinApproveTiga', fn($q3) => $q3->where('status', 2))
-                    ->count()),
+                ->modifyQueryUsing(
+                    fn(Builder $query) => $query
+                        ->where('user_id', $userId)
+                        ->where(function ($query) {
+                            $query->whereHas('suratIzinApprove', fn($query) => $query->where('status', 2))
+                                ->orWhereHas('suratIzinApproveDua', fn($query) => $query->where('status', 2))
+                                ->orWhereHas('suratIzinApproveTiga', fn($query) => $query->where('status', 2));
+                        })
+                ),
         ];
     }
+
 
     protected function makeTable(): Table
     {

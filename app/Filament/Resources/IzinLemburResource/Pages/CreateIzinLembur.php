@@ -73,11 +73,13 @@ class CreateIzinLembur extends CreateRecord
         // Step 1: Create the first approval stage (izinLemburApprove) linked to izinLembur
         $izinApprove = $izinLembur->izinLemburApprove()->create([
             'izin_lembur_id' => $izinLembur->id,
+            'user_id' => Auth::user()->user_approve_id,
         ]);
 
         // Step 2: Create the second approval stage (izinLemburApproveDua) linked to izinLemburApprove
         $izinApproveDua = $izinApprove->izinLemburApproveDua()->create([
             'izin_lembur_approve_id' => $izinApprove->id,
+            'user_id' => Auth::user()->user_approve_dua_id,
         ]);
 
         // Step 3: Create the third approval stage (izinLemburApproveTiga) linked to izinLemburApproveDua and izinLemburApprove

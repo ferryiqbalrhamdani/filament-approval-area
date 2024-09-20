@@ -64,6 +64,11 @@ class SuratIzinApproveDuaResource extends Resource
                     ->label('Nama User')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('suratIzin.user.company.slug')
+                    ->label('Company')
+                    ->badge()
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('suratIzin.keperluan_izin')
                     ->label('Keperluan Izin')
                     ->sortable()
@@ -193,14 +198,19 @@ class SuratIzinApproveDuaResource extends Resource
                         ->icon('heroicon-o-arrow-uturn-left')
                         ->requiresConfirmation()
                         ->action(function (SuratIzinApproveDua $record, array $data): void {
-                            // Hapus data di SuratIzinApproveDua jika ada dan statusnya 0
-
 
                             $record->update([
                                 'status' => 0,
                                 'keterangan' => null,
                                 'user_id' => Auth::user()->id,
                             ]);
+
+                            if ($record->suratIzin->user->user_approve_dua_id == null) {
+                                $record->suratIzin->suratIzinApprove->update([
+                                    'status' => 0,
+                                ]);
+                            }
+
                             Notification::make()
                                 ->title('Data berhasil di kembalikan')
                                 ->success()
@@ -215,6 +225,12 @@ class SuratIzinApproveDuaResource extends Resource
                                 'status' => 1,
                                 'user_id' => Auth::user()->id,
                             ]);
+
+                            if ($record->suratIzin->user->user_approve_dua_id == null) {
+                                $record->suratIzin->suratIzinApprove->update([
+                                    'status' => 1,
+                                ]);
+                            }
 
                             Notification::make()
                                 ->title('Data berhasil di Approve')
@@ -238,6 +254,13 @@ class SuratIzinApproveDuaResource extends Resource
                                 'status' => 2,
                                 'keterangan' => $data['keterangan'],
                             ]);
+
+                            if ($record->suratIzin->user->user_approve_dua_id == null) {
+                                $record->suratIzin->suratIzinApprove->update([
+                                    'status' => 2,
+                                ]);
+                            }
+
                             Notification::make()
                                 ->title('Data berhasil di Reject')
                                 ->success()
@@ -262,6 +285,12 @@ class SuratIzinApproveDuaResource extends Resource
                                     'status' => 1,
                                     'keterangan' => null,
                                 ]);
+
+                                if ($record->suratIzin->user->user_approve_dua_id == null) {
+                                    $record->suratIzin->suratIzinApprove->update([
+                                        'status' => 1,
+                                    ]);
+                                }
                             }
 
 
@@ -278,9 +307,7 @@ class SuratIzinApproveDuaResource extends Resource
                 fn(SuratIzinApproveDua $record): int => $record->status === 0,
             )
             ->query(function (SuratIzinApproveDua $query) {
-                return $query->whereHas('suratIzin.user', function ($query) {
-                    $query->where('company_id', Auth::user()->company_id);
-                });
+                return $query->where('user_id', Auth::user()->id);
             })
             ->recordAction(null)
             ->recordUrl(null);
@@ -395,9 +422,7 @@ class SuratIzinApproveDuaResource extends Resource
         $modelClass = static::$model;
 
         $count = $modelClass::where('status', 0)
-            ->whereHas('suratIzin.user', function (Builder $query) {
-                $query->where('company_id', Auth::user()->company_id);
-            })
+            ->where('user_id', Auth::user()->id)
             ->count();
 
         return (string) $count;

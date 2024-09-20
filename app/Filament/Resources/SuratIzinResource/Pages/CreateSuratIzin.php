@@ -92,12 +92,37 @@ class CreateSuratIzin extends CreateRecord
     {
         $suratIzin = $this->record;
 
-        $suratIzin->suratIzinApprove()->create([
-            'surat_izin_id' => $suratIzin->id,
-        ]);
-        $suratIzin->suratIzinApproveDua()->create([
-            'surat_izin_id' => $suratIzin->id,
-        ]);
+
+        if (Auth::user()->user_approve_id == null && Auth::user()->user_approve_dua_id != null) {
+
+            $suratIzin->suratIzinApprove()->create([
+                'surat_izin_id' => $suratIzin->id,
+            ]);
+            $suratIzin->suratIzinApproveDua()->create([
+                'surat_izin_id' => $suratIzin->id,
+                'user_id' => Auth::user()->user_approve_dua_id,
+            ]);
+        } elseif (Auth::user()->user_approve_id != null && Auth::user()->user_approve_dua_id == null) {
+
+            $suratIzin->suratIzinApprove()->create([
+                'surat_izin_id' => $suratIzin->id,
+                'user_id' => Auth::user()->user_approve_id,
+            ]);
+            $suratIzin->suratIzinApproveDua()->create([
+                'surat_izin_id' => $suratIzin->id,
+            ]);
+        } elseif (Auth::user()->user_approve_id != null && Auth::user()->user_approve_dua_id != null) {
+
+            $suratIzin->suratIzinApprove()->create([
+                'surat_izin_id' => $suratIzin->id,
+                'user_id' => Auth::user()->user_approve_id,
+            ]);
+            $suratIzin->suratIzinApproveDua()->create([
+                'surat_izin_id' => $suratIzin->id,
+                'user_id' => Auth::user()->user_approve_dua_id,
+            ]);
+        }
+
         $suratIzin->suratIzinApproveTiga()->create([
             'surat_izin_id' => $suratIzin->id,
         ]);

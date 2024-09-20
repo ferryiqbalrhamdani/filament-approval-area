@@ -84,12 +84,14 @@ class CreateCutiKhusus extends CreateRecord
             'mulai_cuti' => $cutiKhusus->mulai_cuti,
             'sampai_cuti' => $cutiKhusus->sampai_cuti,
             'pesan_cuti' => $cutiKhusus->keterangan_cuti,
+            'user_id' => Auth::user()->user_approve_id,
 
         ]);
 
         // Step 2: Create the second approval stage (cutiKhususApproveDua) linked to cutiKhususApprove
         $cutiKhususDua = $cutiKhusus->izinCutiApproveDua()->create([
             'cuti_khusus_approve_id' => $cutiKhusus->id,
+            'user_id' => Auth::user()->user_approve_dua_id,
         ]);
 
         // Step 3: Create the third approval stage (cutiKhususApproveTiga) linked to cutiKhususApproveDua and cutiKhususApprove

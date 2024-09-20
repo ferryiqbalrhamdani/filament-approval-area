@@ -251,14 +251,7 @@ class IzinCutiApproveDuaResource extends Resource
                 ]),
             ])
             ->query(function (IzinCutiApproveDua $query) {
-                return $query->where(function ($query) {
-                    $query->whereHas('izinCutiApprove.cutiKhusus.user', function ($query) {
-                        $query->where('company_id', Auth::user()->company_id);
-                    })
-                        ->orWhereHas('izinCutiApprove.cutiPribadi.user', function ($query) {
-                            $query->where('company_id', Auth::user()->company_id);
-                        });
-                });
+                return $query->where('user_id', Auth::user()->id);
             });
     }
 
@@ -383,9 +376,7 @@ class IzinCutiApproveDuaResource extends Resource
         $modelClass = static::$model;
 
         $count = $modelClass::where('status', 0)
-            ->whereHas('izinCutiApprove.userCuti', function (Builder $query) {
-                $query->where('company_id', Auth::user()->company_id);
-            })
+            ->where('user_id', Auth::user()->id)
             ->count();
 
         return (string) $count;

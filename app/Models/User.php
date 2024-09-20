@@ -29,6 +29,8 @@ class User extends Authenticatable
         'jk',
         'status_karyawan',
         'cuti',
+        'user_approve_id',
+        'user_approve_dua_id',
     ];
 
     /**
@@ -77,5 +79,29 @@ class User extends Authenticatable
     public function division()
     {
         return $this->belongsTo(Division::class);
+    }
+    public function userApprove()
+    {
+        return $this->belongsTo(User::class, 'user_approve_id');
+    }
+
+    public function userApproveDua()
+    {
+        return $this->belongsTo(User::class, 'user_approve_dua_id');
+    }
+
+    public function suratIzin()
+    {
+        return $this->hasMany(SuratIzin::class);
+    }
+
+    public function cuti()
+    {
+        return $this->hasMany(IzinCutiApprove::class);
+    }
+
+    public function lembur()
+    {
+        return $this->hasMany(IzinLembur::class);
     }
 }

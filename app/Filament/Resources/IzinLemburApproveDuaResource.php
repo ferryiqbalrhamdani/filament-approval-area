@@ -234,9 +234,7 @@ class IzinLemburApproveDuaResource extends Resource
                 fn(IzinLemburApproveDua $record): int => $record->status === 0,
             )
             ->query(function (IzinLemburApproveDua $query) {
-                return $query->whereHas('izinLemburApprove.izinLembur.user', function ($query) {
-                    $query->where('company_id', Auth::user()->company_id);
-                });
+                return $query->where('user_id', Auth::user()->id);
             })
             ->defaultSort('created_at', 'desc')
             ->recordAction(null)
@@ -348,9 +346,7 @@ class IzinLemburApproveDuaResource extends Resource
         $modelClass = static::$model;
 
         $count = $modelClass::where('status', 0)
-            ->whereHas('izinLemburApprove.izinLembur.user', function (Builder $query) {
-                $query->where('company_id', Auth::user()->company_id);
-            })
+            ->where('user_id', Auth::user()->id)
             ->count();
 
         return (string) $count;

@@ -49,6 +49,11 @@ class IzinLemburApproveResource extends Resource
                     ->label('Nama User')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('izinLembur.user.company.slug')
+                    ->label('Company')
+                    ->badge()
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('izinLembur.tanggal_lembur')
                     ->label('Tanggal Lembur')
                     ->date()
@@ -235,9 +240,7 @@ class IzinLemburApproveResource extends Resource
                 fn(IzinLemburApprove $record): int => $record->status === 0,
             )
             ->query(function (IzinLemburApprove $query) {
-                return $query->whereHas('izinLembur.user', function ($query) {
-                    $query->where('company_id', Auth::user()->company_id);
-                });
+                return $query->where('user_id', Auth::user()->id);
             })
             ->recordAction(null)
             ->recordUrl(null)
@@ -347,9 +350,7 @@ class IzinLemburApproveResource extends Resource
         $modelClass = static::$model;
 
         $count = $modelClass::where('status', 0)
-            ->whereHas('izinLembur.user', function (Builder $query) {
-                $query->where('company_id', Auth::user()->company_id);
-            })
+            ->where('user_id', Auth::user()->id)
             ->count();
 
         return (string) $count;

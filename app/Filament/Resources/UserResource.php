@@ -182,6 +182,31 @@ class UserResource extends Resource
                                     ->preload()
                                     ->searchable(),
                             ])->columns(3),
+                        Forms\Components\Fieldset::make('Skema Approve')
+                            ->schema([
+                                Forms\Components\Select::make('user_approve_id')
+                                    ->label('User Approve Satu')
+                                    ->relationship(
+                                        name: 'userApprove',
+                                        modifyQueryUsing: fn(Builder $query) => $query->orderBy('first_name')->orderBy('last_name'),
+                                    )
+                                    ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->first_name} {$record->last_name}")
+                                    ->searchable(['first_name', 'last_name'])
+                                    ->helperText('Jika tidak ada user approve, biarkan kosong')
+                                    ->preload(),
+                                Forms\Components\Select::make('user_approve_dua_id')
+                                    ->label('User Approve Dua')
+                                    ->relationship(
+                                        name: 'userApproveDua',
+                                        modifyQueryUsing: fn(Builder $query) => $query->orderBy('first_name')->orderBy('last_name'),
+                                    )
+                                    ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->first_name} {$record->last_name}")
+                                    ->searchable(['first_name', 'last_name'])
+                                    ->helperText('Jika tidak ada user approve dua, biarkan kosong')
+                                    ->preload(),
+
+                            ])
+                            ->columns(2),
                     ]),
             ]);
     }

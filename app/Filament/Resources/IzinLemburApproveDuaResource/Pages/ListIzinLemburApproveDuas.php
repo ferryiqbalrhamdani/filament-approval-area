@@ -23,51 +23,35 @@ class ListIzinLemburApproveDuas extends ListRecords
 
     public function getTabs(): array
     {
-        $companyId = Auth::user()->company_id;
-
         return [
             null => Tab::make('All')
-                ->badge(fn() => IzinLemburApproveDua::whereHas('izinLemburApprove.izinLembur.user', function ($query) use ($companyId) {
-                    $query->where('company_id', $companyId);
-                })->count()),
+                ->badge(fn() => IzinLemburApproveDua::where('user_id', Auth::user()->id)->count()),
 
-            'processing' => Tab::make('Processing')
+            'proccessing' => Tab::make('Proccessing')
                 ->query(
-                    fn($query) => $query->where('status', 0)
-                        ->whereHas('izinLemburApprove.izinLembur.user', function ($query) use ($companyId) {
-                            $query->where('company_id', $companyId);
-                        })
+                    fn($query) => $query->where('user_id', Auth::user()->id)
+                        ->where('status', 0)
                 )
-                ->badge(fn() => IzinLemburApproveDua::where('status', 0)
-                    ->whereHas('izinLemburApprove.izinLembur.user', function ($query) use ($companyId) {
-                        $query->where('company_id', $companyId);
-                    })
+                ->badge(fn() => IzinLemburApproveDua::where('user_id', Auth::user()->id)
+                    ->where('status', 0)
                     ->count()),
 
             'approved' => Tab::make('Approved')
                 ->query(
-                    fn($query) => $query->where('status', 1)
-                        ->whereHas('izinLemburApprove.izinLembur.user', function ($query) use ($companyId) {
-                            $query->where('company_id', $companyId);
-                        })
+                    fn($query) => $query->where('user_id', Auth::user()->id)
+                        ->where('status', 1)
                 )
-                ->badge(fn() => IzinLemburApproveDua::where('status', 1)
-                    ->whereHas('izinLemburApprove.izinLembur.user', function ($query) use ($companyId) {
-                        $query->where('company_id', $companyId);
-                    })
+                ->badge(fn() => IzinLemburApproveDua::where('user_id', Auth::user()->id)
+                    ->where('status', 1)
                     ->count()),
 
             'rejected' => Tab::make('Rejected')
                 ->query(
-                    fn($query) => $query->where('status', 2)
-                        ->whereHas('izinLemburApprove.izinLembur.user', function ($query) use ($companyId) {
-                            $query->where('company_id', $companyId);
-                        })
+                    fn($query) => $query->where('user_id', Auth::user()->id)
+                        ->where('status', 2)
                 )
-                ->badge(fn() => IzinLemburApproveDua::where('status', 2)
-                    ->whereHas('izinLemburApprove.izinLembur.user', function ($query) use ($companyId) {
-                        $query->where('company_id', $companyId);
-                    })
+                ->badge(fn() => IzinLemburApproveDua::where('user_id', Auth::user()->id)
+                    ->where('status', 2)
                     ->count()),
         ];
     }
@@ -75,6 +59,6 @@ class ListIzinLemburApproveDuas extends ListRecords
 
     public function getDefaultActiveTab(): string | int | null
     {
-        return 'processing';
+        return 'proccessing';
     }
 }

@@ -22,69 +22,36 @@ class ListIzinCutiApproves extends ListRecords
 
     public function getTabs(): array
     {
-
         return [
             null => Tab::make('All')
-                ->badge(function () {
-                    $companyId = Auth::user()->company_id; // Get the logged-in user's company_id
+                ->badge(fn() => IzinCutiApprove::where('user_id', Auth::user()->id)->count()),
 
-                    return IzinCutiApprove::whereHas('userCuti', function ($query) use ($companyId) {
-                        $query->where('company_id', $companyId); // Filter by company_id
-                    })->count();
-                }),
+            'proccessing' => Tab::make('Proccessing')
+                ->query(
+                    fn($query) => $query->where('user_id', Auth::user()->id)
+                        ->where('status', 0)
+                )
+                ->badge(fn() => IzinCutiApprove::where('user_id', Auth::user()->id)
+                    ->where('status', 0)
+                    ->count()),
 
-            'proccessing' => Tab::make('Processing')
-                ->query(function () {
-                    $companyId = Auth::user()->company_id; // Get the logged-in user's company_id
-
-                    return IzinCutiApprove::whereHas('userCuti', function ($query) use ($companyId) {
-                        $query->where('status', 0)
-                            ->where('company_id', $companyId); // Filter by company_id
-                    });
-                })
-                ->badge(function () {
-                    $companyId = Auth::user()->company_id; // Get the logged-in user's company_id
-
-                    return IzinCutiApprove::whereHas('userCuti', function ($query) use ($companyId) {
-                        $query->where('status', 0)
-                            ->where('company_id', $companyId); // Filter by company_id
-                    })->count();
-                }),
             'approved' => Tab::make('Approved')
-                ->query(function () {
-                    $companyId = Auth::user()->company_id; // Get the logged-in user's company_id
+                ->query(
+                    fn($query) => $query->where('user_id', Auth::user()->id)
+                        ->where('status', 1)
+                )
+                ->badge(fn() => IzinCutiApprove::where('user_id', Auth::user()->id)
+                    ->where('status', 1)
+                    ->count()),
 
-                    return IzinCutiApprove::whereHas('userCuti', function ($query) use ($companyId) {
-                        $query->where('status', 1)
-                            ->where('company_id', $companyId); // Filter by company_id
-                    });
-                })
-                ->badge(function () {
-                    $companyId = Auth::user()->company_id; // Get the logged-in user's company_id
-
-                    return IzinCutiApprove::whereHas('userCuti', function ($query) use ($companyId) {
-                        $query->where('status', 1)
-                            ->where('company_id', $companyId); // Filter by company_id
-                    })->count();
-                }),
             'rejected' => Tab::make('Rejected')
-                ->query(function () {
-                    $companyId = Auth::user()->company_id; // Get the logged-in user's company_id
-
-                    return IzinCutiApprove::whereHas('userCuti', function ($query) use ($companyId) {
-                        $query->where('status', 2)
-                            ->where('company_id', $companyId); // Filter by company_id
-                    });
-                })
-                ->badge(function () {
-                    $companyId = Auth::user()->company_id; // Get the logged-in user's company_id
-
-                    return IzinCutiApprove::whereHas('userCuti', function ($query) use ($companyId) {
-                        $query->where('status', 2)
-                            ->where('company_id', $companyId); // Filter by company_id
-                    })->count();
-                }),
-
+                ->query(
+                    fn($query) => $query->where('user_id', Auth::user()->id)
+                        ->where('status', 2)
+                )
+                ->badge(fn() => IzinCutiApprove::where('user_id', Auth::user()->id)
+                    ->where('status', 2)
+                    ->count()),
         ];
     }
 
