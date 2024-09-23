@@ -21,11 +21,13 @@ class StatsOverview extends BaseWidget
 
         return [
             Stat::make('Total Izin', $user->suratIzin()->count())
-                ->color('success')
+                ->color($user->suratIzin()->count() > 0 ? 'success' : 'gray')
                 ->chart($suratIzinCounts), // Pass the calculated monthly counts for the chart
             Stat::make('Total Cuti', $user->cuti()->count())
+                ->color($user->cuti()->count() > 0 ? 'success' : 'gray')
                 ->chart($cutiCounts), // Pass the calculated monthly counts for the chart
             Stat::make('Total Lembur', $user->lembur()->count())
+                ->color($user->lembur()->count() > 0 ? 'success' : 'gray')
                 ->chart($lemburCounts), // Pass the calculated monthly counts for the chart
         ];
     }

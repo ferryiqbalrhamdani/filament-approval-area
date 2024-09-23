@@ -31,6 +31,7 @@ class User extends Authenticatable
         'cuti',
         'user_approve_id',
         'user_approve_dua_id',
+        'tgl_pengangkatan',
     ];
 
     /**

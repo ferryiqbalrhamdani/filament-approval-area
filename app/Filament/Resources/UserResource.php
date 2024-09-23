@@ -8,6 +8,7 @@ use App\Models\User;
 use Filament\Tables;
 use App\Models\Office;
 use App\Models\Company;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Enum\GenderType;
 use App\Models\Division;
@@ -168,19 +169,24 @@ class UserResource extends Resource
                                         'magang' => 'Magang',
                                         'harian lepas' => 'Harian Lepas',
                                     ])
-                                    ->searchable(),
+                                    ->searchable()
+                                    ->reactive(),
                                 Forms\Components\TextInput::make('cuti')
                                     ->label('Sisa Cuti')
                                     ->integer()
+                                    ->default(0)
                                     ->maxLength(255)
                                     ->minValue(0)
-                                    ->required(),
+                                    ->required()
+                                    ->visibleOn('edit'),
                                 Forms\Components\Select::make('roles')
                                     ->relationship('roles', 'name', fn(Builder $query) => $query->where('id', '>', 1)->orWhere('name', '!=', 'super_admin')->orderBy('name', 'asc'))
                                     ->required()
                                     ->multiple()
                                     ->preload()
                                     ->searchable(),
+                                Forms\Components\DatePicker::make('tgl_pengangkatan')
+                                    ->visible(fn(Get $get) => $get('status_karyawan') === 'tetap'),
                             ])->columns(3),
                         Forms\Components\Fieldset::make('Skema Approve')
                             ->schema([
