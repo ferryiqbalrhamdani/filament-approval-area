@@ -105,4 +105,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(IzinLembur::class);
     }
+
+
+    public function userPasswordReset()
+    {
+        return $this->belongsTo(PasswordReset::class);
+    }
 }
