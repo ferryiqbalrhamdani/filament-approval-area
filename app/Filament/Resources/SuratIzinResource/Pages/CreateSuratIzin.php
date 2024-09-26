@@ -82,11 +82,6 @@ class CreateSuratIzin extends CreateRecord
         return $data;
     }
 
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
-    }
-
 
     protected function afterCreate(): void
     {
@@ -121,12 +116,23 @@ class CreateSuratIzin extends CreateRecord
                 'surat_izin_id' => $suratIzin->id,
                 'user_id' => Auth::user()->user_approve_dua_id,
             ]);
+        } else {
+
+            $suratIzin->suratIzinApprove()->create([
+                'surat_izin_id' => $suratIzin->id,
+            ]);
+            $suratIzin->suratIzinApproveDua()->create([
+                'surat_izin_id' => $suratIzin->id,
+            ]);
         }
 
         $suratIzin->suratIzinApproveTiga()->create([
             'surat_izin_id' => $suratIzin->id,
         ]);
+    }
 
-        $this->redirect($this->getRedirectUrl());
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

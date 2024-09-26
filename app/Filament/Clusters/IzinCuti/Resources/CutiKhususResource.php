@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\IzinCuti\Resources;
 
+use Closure;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Infolists\Components\Group;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\Section;
 use Filament\Tables\Enums\ActionsPosition;
@@ -43,14 +45,19 @@ class CutiKhususResource extends Resource
                         Forms\Components\Select::make('pilihan_cuti')
                             ->options(function () {
                                 $options = [
-                                    'Bencana Alam' => 'Bencana Alam',
                                     'Menikah' => 'Menikah',
-                                    'Keluraga Inti' => 'Keluraga Inti',
+                                    'Menikahkan Anak' => 'Menikahkan Anak',
+                                    'Mengkhitankan/Membaptiskan Anak' => 'Mengkhitankan/Membaptiskan Anak',
+                                    'Suami/Istri/Anak/Orangtua/Mertua/Menantu Meninggal' => 'Suami/Istri/Anak/Orangtua/Mertua/Menantu Meninggal',
+                                    'Anggota Keluarga Dalam Satu Rumah Meninggal' => 'Anggota Keluarga Dalam Satu Rumah Meninggal',
+                                    'Bencana Alam' => 'Bencana Alam',
                                 ];
 
                                 // Add 'Cuti Melahirkan' if the user is female
                                 if (Auth::user() && Auth::user()->jk === 'Perempuan') {
                                     $options['Cuti Melahirkan'] = 'Cuti Melahirkan';
+                                } elseif (Auth::user() && Auth::user()->jk === 'Laki-laki') {
+                                    $options['Istri Melahirkan, Keguguran Kandungan'] = 'Istri Melahirkan, Keguguran Kandungan';
                                 }
 
                                 return $options;
@@ -61,9 +68,13 @@ class CutiKhususResource extends Resource
                             ->reactive() // This makes the Select field reactive to changes
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if ($state === 'Menikah') {
-                                    $set('cuti_helper_text', 'Jatah cuti menikah selama 3 hari');
+                                    $set('cuti_helper_text', 'Jatah cuti selama 3 hari');
                                 } elseif ($state === 'Cuti Melahirkan') {
                                     $set('cuti_helper_text', 'Jatah cuti melahirkan selama 3 bulan');
+                                } elseif ($state === 'Menikahkan Anak' || $state === 'Mengkhitankan/Membaptiskan Anak' || $state === 'Suami/Istri/Anak/Orangtua/Mertua/Menantu Meninggal' || $state === 'Istri Melahirkan, Keguguran Kandungan') {
+                                    $set('cuti_helper_text', 'Jatah cuti selama 2 hari');
+                                } elseif ($state === 'Anggota Keluarga Dalam Satu Rumah Meninggal' || $state === 'Bencana Alam') {
+                                    $set('cuti_helper_text', 'Jatah cuti selama 1 hari');
                                 } else {
                                     $set('cuti_helper_text', null);
                                 }
@@ -71,19 +82,34 @@ class CutiKhususResource extends Resource
                             ->columnSpanFull(),
                         Forms\Components\DatePicker::make('mulai_cuti')
                             ->helperText(fn(callable $get) => $get('cuti_helper_text'))
-                            ->required(),
-                        Forms\Components\DatePicker::make('sampai_cuti')
                             ->required()
-                            ->hidden(fn(Get $get) => in_array($get('pilihan_cuti'), [
-                                'Menikah',
-                                'Cuti Melahirkan',
-                            ])),
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                // Pengecekan apakah tanggal jatuh pada weekend (Sabtu atau Minggu)
+                                $tanggalIzin = Carbon::parse($state);
+                                if ($tanggalIzin->isWeekend()) {
+                                    Notification::make()
+                                        ->title('Perhatian')
+                                        ->body('Tidak boleh memulai izin cuti di hari weekend. Silahkan pilih tanggal yang lain.')
+                                        ->warning()
+                                        ->duration(10000)
+                                        ->send();
+                                }
+                            })
+                            ->rules([
+                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                                    $tanggalIzin = Carbon::parse($value);
+                                    if ($tanggalIzin->isWeekend()) {
+                                        $fail('Tidak boleh memulai izin cuti di hari weekend. Silahkan pilih tanggal yang lain.');
+                                    }
+                                },
+                            ]),
                         Forms\Components\Textarea::make('keterangan_cuti')
                             ->required()
                             ->rows(7)
                             ->columnSpanFull()
                             ->maxLength(255),
-                    ])->columns(2),
+                    ])->columns(1),
             ]);
     }
 

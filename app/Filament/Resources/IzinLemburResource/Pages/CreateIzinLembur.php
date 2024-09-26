@@ -55,16 +55,8 @@ class CreateIzinLembur extends CreateRecord
 
         $data['tarif_lembur_id'] = $tarifLembur->id;
 
-
-
         return $data;
     }
-
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
-    }
-
 
     protected function afterCreate(): void
     {
@@ -88,6 +80,10 @@ class CreateIzinLembur extends CreateRecord
         ]);
 
         // Redirect after successful creation
-        $this->redirect($this->getRedirectUrl());
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

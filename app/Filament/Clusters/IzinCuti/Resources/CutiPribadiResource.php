@@ -2,6 +2,7 @@
 
 namespace App\Filament\Clusters\IzinCuti\Resources;
 
+use Closure;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
@@ -42,10 +43,51 @@ class CutiPribadiResource extends Resource
                     ->schema([
                         Forms\Components\DatePicker::make('mulai_cuti')
                             ->required()
-                            ->reactive(),
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                // Pengecekan apakah tanggal jatuh pada weekend (Sabtu atau Minggu)
+                                $tanggalIzin = Carbon::parse($state);
+                                if ($tanggalIzin->isWeekend()) {
+                                    Notification::make()
+                                        ->title('Perhatian')
+                                        ->body('Tidak boleh memulai izin cuti di hari weekend. Silahkan pilih tanggal yang lain.')
+                                        ->warning()
+                                        ->duration(10000)
+                                        ->send();
+                                }
+                            })
+                            ->rules([
+                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                                    $tanggalIzin = Carbon::parse($value);
+                                    if ($tanggalIzin->isWeekend()) {
+                                        $fail('Tidak boleh memulai izin cuti di hari weekend. Silahkan pilih tanggal yang lain.');
+                                    }
+                                },
+                            ]),
                         Forms\Components\DatePicker::make('sampai_cuti')
                             ->required()
-                            ->afterOrEqual('mulai_cuti'),
+                            ->afterOrEqual('mulai_cuti')
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                // Pengecekan apakah tanggal jatuh pada weekend (Sabtu atau Minggu)
+                                $tanggalIzin = Carbon::parse($state);
+                                if ($tanggalIzin->isWeekend()) {
+                                    Notification::make()
+                                        ->title('Perhatian')
+                                        ->body('Tidak boleh akhir izin cuti di hari weekend. Silahkan pilih tanggal yang lain.')
+                                        ->warning()
+                                        ->duration(10000)
+                                        ->send();
+                                }
+                            })
+                            ->rules([
+                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                                    $tanggalIzin = Carbon::parse($value);
+                                    if ($tanggalIzin->isWeekend()) {
+                                        $fail('Tidak boleh akhir izin cuti di hari weekend. Silahkan pilih tanggal yang lain.');
+                                    }
+                                },
+                            ]),
                         Forms\Components\Textarea::make('keterangan_cuti')
                             ->required()
                             ->rows(7)
@@ -186,7 +228,25 @@ class CutiPribadiResource extends Resource
                     ->label('Actions'),
             ], position: ActionsPosition::BeforeCells)
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->action(function (\Illuminate\Database\Eloquent\Collection $records): void {
+                        foreach ($records as $record) {
+                            $lamaCuti = explode(' ', $record->lama_cuti);
+                            $cutiUser = $record->user->cuti;
+
+                            $record->user->update([
+                                'cuti' => $cutiUser + (int)$lamaCuti[0],
+                            ]);
+
+                            $record->delete();
+                        }
+
+                        Notification::make()
+                            ->title('Data berhasil di hapus')
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
             ])
             ->checkIfRecordIsSelectableUsing(
                 fn(CutiPribadi $record): int =>

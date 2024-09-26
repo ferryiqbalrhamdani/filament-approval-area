@@ -89,6 +89,7 @@ class CustomPasswordReset extends RequestPasswordReset
     {
         return TextInput::make('username')
             ->label(__('Username'))
+            ->placeholder('Masukkan username anda')
             ->required()
             ->autocomplete()
             ->autofocus();

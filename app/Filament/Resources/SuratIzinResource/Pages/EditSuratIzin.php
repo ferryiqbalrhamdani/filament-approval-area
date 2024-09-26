@@ -11,6 +11,7 @@ class EditSuratIzin extends EditRecord
 {
     protected static string $resource = SuratIzinResource::class;
 
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Check and adjust 'sampai_tanggal'
@@ -73,5 +74,10 @@ class EditSuratIzin extends EditRecord
             Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

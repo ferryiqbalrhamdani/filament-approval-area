@@ -44,10 +44,10 @@ class IzinLemburResource extends Resource
                             ->required(),
                         Forms\Components\TimePicker::make('start_time')
                             ->label('Jam mulai')
+                            ->timezone('Asia/Jakarta')
                             ->default('17:00')
                             ->seconds(false)
-                            ->required()
-                            ->minutesStep(false),
+                            ->required(),
                         Forms\Components\TimePicker::make('end_time')
                             ->label('Jam selesai')
                             ->default('18:00')
@@ -182,9 +182,7 @@ class IzinLemburResource extends Resource
                     ->label('Actions'),
             ], position: ActionsPosition::BeforeCells)
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ])
             ->checkIfRecordIsSelectableUsing(
                 fn(IzinLembur $record): int => $record->izinLemburApprove->status === 0 && $record->IzinLemburApprove->IzinLemburApproveDua->status === 0 && $record->IzinLemburApprove->IzinLemburApproveDua->IzinLemburApproveTiga->status === 0,

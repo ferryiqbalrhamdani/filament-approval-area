@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Closure;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Tables;
@@ -10,23 +11,24 @@ use Filament\Forms\Set;
 use Filament\Forms\Form;
 use App\Models\SuratIzin;
 use Filament\Tables\Table;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Auth;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
+use Filament\Infolists\Components\Group;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Infolists\Components\Section;
 use Filament\Tables\Enums\ActionsPosition;
+use Filament\Infolists\Components\Fieldset;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
+use Filament\Infolists\Components\ImageEntry;
 use App\Filament\Resources\SuratIzinResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Coolsam\FilamentFlatpickr\Forms\Components\Flatpickr;
 use App\Filament\Resources\SuratIzinResource\RelationManagers;
-use Filament\Infolists\Components\Fieldset;
-use Filament\Infolists\Components\Group;
-use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\ViewEntry;
-use Filament\Infolists\Infolist;
 
 class SuratIzinResource extends Resource
 {
@@ -85,11 +87,54 @@ class SuratIzinResource extends Resource
                                                 'Izin Tidak Masuk Kerja',
                                                 'Izin Meninggalkan Kantor',
                                                 'Tugas Meninggalkan Kantor',
-                                            ])),
+                                            ]))
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                // Pengecekan apakah tanggal jatuh pada weekend (Sabtu atau Minggu)
+                                                $tanggalIzin = Carbon::parse($state);
+                                                if ($tanggalIzin->isWeekend()) {
+                                                    Notification::make()
+                                                        ->title('Perhatian')
+                                                        ->body('Tidak boleh memulai izin di hari weekend. Silahkan pilih tanggal yang lain.')
+                                                        ->warning()
+                                                        ->duration(10000)
+                                                        ->send();
+                                                }
+                                            })
+                                            ->rules([
+                                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                                                    $tanggalIzin = Carbon::parse($value);
+                                                    if ($tanggalIzin->isWeekend()) {
+                                                        $fail('Tidak boleh memulai izin di hari weekend. Silahkan pilih tanggal yang lain.');
+                                                    }
+                                                },
+                                            ]),
                                         Forms\Components\DatePicker::make('sampai_tanggal')
                                             ->required()
                                             ->afterOrEqual('tanggal_izin')
-                                            ->visible(fn(Get $get) => $get('keperluan_izin') === 'Izin Tidak Masuk Kerja'  || $get('status_izin') === 'lebih_dari_sehari'),
+                                            ->hidden(fn(Get $get) => $get('keperluan_izin') === 'Izin Datang Terlambat')
+                                            ->visible(fn(Get $get) => $get('keperluan_izin') === 'Izin Tidak Masuk Kerja'  || $get('status_izin') === 'lebih_dari_sehari')
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                // Pengecekan apakah tanggal jatuh pada weekend (Sabtu atau Minggu)
+                                                $tanggalIzin = Carbon::parse($state);
+                                                if ($tanggalIzin->isWeekend()) {
+                                                    Notification::make()
+                                                        ->title('Perhatian')
+                                                        ->body('Tidak boleh akhir izin di hari weekend. Silahkan pilih tanggal yang lain.')
+                                                        ->warning()
+                                                        ->duration(10000)
+                                                        ->send();
+                                                }
+                                            })
+                                            ->rules([
+                                                fn(): Closure => function (string $attribute, $value, Closure $fail) {
+                                                    $tanggalIzin = Carbon::parse($value);
+                                                    if ($tanggalIzin->isWeekend()) {
+                                                        $fail('Tidak boleh akhir izin di hari weekend. Silahkan pilih tanggal yang lain.');
+                                                    }
+                                                },
+                                            ]),
                                     ])->columns(2),
                             ])
                             ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [
@@ -112,6 +157,13 @@ class SuratIzinResource extends Resource
                                             ])),
                                         Forms\Components\TimePicker::make('sampai_jam')
                                             ->seconds(false)
+                                            ->label(function (Get $get) {
+                                                if ($get('keperluan_izin') === 'Izin Datang Terlambat') {
+                                                    return 'Jam Masuk';
+                                                } else {
+                                                    return 'Sampai Jam';
+                                                }
+                                            })
                                             ->timezone('Asia/Jakarta')
                                             ->required()
                                             ->visible(fn(Get $get) => in_array($get('keperluan_izin'), [

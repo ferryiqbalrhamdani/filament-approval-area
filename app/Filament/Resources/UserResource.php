@@ -43,151 +43,166 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Section::make('Personal Information')
+                    ->schema([
+                        Forms\Components\TextInput::make('first_name')
+                            ->label('Nama Depan')
+                            ->placeholder('Jhon')
+                            ->inlineLabel()
+                            ->required()
+                            ->live(onBlur: true)
+                            ->maxLength(255)
+                            ->afterStateHydrated(fn($set, $get) => self::generateUsername($set, $get))
+                            ->afterStateUpdated(fn($set, $get) => self::generateUsername($set, $get)),
+                        Forms\Components\TextInput::make('last_name')
+                            ->label('Nama Belakang')
+                            ->placeholder('Albert Doe')
+                            ->inlineLabel()
+                            ->helperText('optional')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('username')
+                            ->required()
+                            ->inlineLabel()
+                            ->helperText('Username akan otomatis dibuat')
+                            ->unique(User::class, 'username', ignoreRecord: true)
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('password')
+                            ->password()
+                            ->inlineLabel()
+                            ->default('password')
+                            ->required()
+                            ->revealable()
+                            ->maxLength(255)
+                            ->helperText('By default password is "password"')
+                            ->visibleOn('create'),
+                        Forms\Components\Radio::make('jk')
+                            ->label('Jenis Kelamin')
+                            ->inlineLabel()
+                            ->inline()
+                            ->options([
+                                GenderType::L->value => 'Laki-laki',
+                                GenderType::P->value => 'Perempuan',
+                            ])
+                            ->default('Laki-laki')
+                            ->required()
+                    ])->columns(2),
+                Forms\Components\Section::make('Informasi Tempat Kerja')
+                    ->schema([
+                        Forms\Components\Select::make('company_id')
+                            ->label('Perusahaan')
+                            ->inlineLabel()
+                            ->required()
+                            ->options(Company::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                            ->searchable(),
+                        Forms\Components\Select::make('office_id')
+                            ->label('Kantor')
+                            ->inlineLabel()
+                            ->required()
+                            ->options(Office::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                            ->searchable(),
+                        Forms\Components\Select::make('position_id')
+                            ->label('Posisi')
+                            ->inlineLabel()
+                            ->required()
+                            ->options(Position::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->createOptionForm([
+                                Forms\Components\Section::make()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $set('slug', Position::generateUniqueSlug($state));
+                                            })
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('slug')
+                                            ->required()
+                                            ->readOnly()
+                                            ->afterStateUpdated(function (Closure $set, $state) {
+                                                $set('slug', Position::generateUniqueSlug($state));
+                                            })
+                                            ->maxLength(255),
+                                        Forms\Components\Toggle::make('is_active')
+                                            ->default(true)
+                                            ->required(),
+                                    ])->columns(2),
+                            ])
+                            ->createOptionUsing(function ($data) {
+                                return Position::create([
+                                    'name' => $data['name'],
+                                    'slug' => $data['slug'],
+                                    'is_active' => $data['is_active'],
+                                ]);
+                            }),
+                        Forms\Components\Select::make('division_id')
+                            ->label('Divisi')
+                            ->inlineLabel()
+                            ->required()
+                            ->options(Division::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->createOptionForm([
+                                Forms\Components\Section::make()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->afterStateUpdated(function (Set $set, $state) {
+                                                $set('slug', Division::generateUniqueSlug($state));
+                                            })
+                                            ->required()
+                                            ->live(onBlur: true)
+                                            ->maxLength(255),
+                                        Forms\Components\TextInput::make('slug')
+                                            ->required()
+                                            ->readOnly()
+                                            ->afterStateUpdated(function (Closure $set, $state) {
+                                                $set('slug', Division::generateUniqueSlug($state));
+                                            })
+                                            ->maxLength(255),
+                                        Forms\Components\Toggle::make('is_active')
+                                            ->default(true)
+                                            ->required(),
+                                    ])->columns(2),
+                            ])
+                            ->createOptionUsing(function ($data) {
+                                return Position::create([
+                                    'name' => $data['name'],
+                                    'slug' => $data['slug'],
+                                    'is_active' => $data['is_active'],
+                                ]);
+                            }),
+                        Forms\Components\Select::make('status_karyawan')
+                            ->required()
+                            ->inlineLabel()
+                            ->options([
+                                'tetap' => 'Tetap',
+                                'kontrak' => 'Kontrak',
+                                'magang' => 'Magang',
+                                'harian lepas' => 'Harian Lepas',
+                            ])
+                            ->searchable()
+                            ->reactive(),
+                        Forms\Components\TextInput::make('cuti')
+                            ->label('Sisa Cuti')
+                            ->inlineLabel()
+                            ->integer()
+                            ->default(0)
+                            ->maxLength(255)
+                            ->minValue(0)
+                            ->required()
+                            ->visibleOn('edit'),
+                        Forms\Components\Select::make('roles')
+                            ->relationship('roles', 'name', fn(Builder $query) => $query->where('id', '>', 1)->orWhere('name', '!=', 'super_admin')->orderBy('name', 'asc'))
+                            ->required()
+                            ->inlineLabel()
+                            ->multiple()
+                            ->preload()
+                            ->searchable(),
+                        Forms\Components\DatePicker::make('tgl_pengangkatan')
+                            ->inlineLabel()
+                            ->visible(fn(Get $get) => $get('status_karyawan') === 'tetap'),
+                    ])->columns(2),
                 Forms\Components\Section::make()
                     ->schema([
-                        Forms\Components\Fieldset::make('Biodata')
-                            ->schema([
-                                Forms\Components\TextInput::make('first_name')
-                                    ->label('First Name')
-                                    ->required()
-                                    ->live(onBlur: true)
-                                    ->maxLength(255)
-                                    ->afterStateHydrated(fn($set, $get) => self::generateUsername($set, $get))
-                                    ->afterStateUpdated(fn($set, $get) => self::generateUsername($set, $get)),
-                                Forms\Components\TextInput::make('last_name')
-                                    ->label('Last Name')
-                                    ->helperText('optional')
-                                    ->maxLength(255),
-                                Forms\Components\TextInput::make('username')
-                                    ->required()
-                                    ->helperText('Username akan otomatis dibuat')
-                                    ->unique(User::class, 'username', ignoreRecord: true)
-                                    ->maxLength(255),
-                                Forms\Components\TextInput::make('password')
-                                    ->password()
-                                    ->default('password')
-                                    ->required()
-                                    ->revealable()
-                                    ->maxLength(255)
-                                    ->helperText('By default password is "password"')
-                                    ->visibleOn('create'),
-                                Forms\Components\Radio::make('jk')
-                                    ->label('Jenis Kelamin')
-                                    ->options([
-                                        GenderType::L->value => 'Laki-laki',
-                                        GenderType::P->value => 'Perempuan',
-                                    ])
-                                    ->default('Laki-laki')
-                                    ->required()
-                                    ->columns(3)
-                            ])->columns(3),
-                        Forms\Components\Fieldset::make('Informasi Tempat Kerja')
-                            ->schema([
-                                Forms\Components\Select::make('company_id')
-                                    ->label('Company')
-                                    ->required()
-                                    ->options(Company::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                                    ->searchable(),
-                                Forms\Components\Select::make('office_id')
-                                    ->label('Office')
-                                    ->required()
-                                    ->options(Office::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                                    ->searchable(),
-                                Forms\Components\Select::make('position_id')
-                                    ->label('Position')
-                                    ->required()
-                                    ->options(Position::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->createOptionForm([
-                                        Forms\Components\Section::make()
-                                            ->schema([
-                                                Forms\Components\TextInput::make('name')
-                                                    ->afterStateUpdated(function (Set $set, $state) {
-                                                        $set('slug', Position::generateUniqueSlug($state));
-                                                    })
-                                                    ->required()
-                                                    ->live(onBlur: true)
-                                                    ->maxLength(255),
-                                                Forms\Components\TextInput::make('slug')
-                                                    ->required()
-                                                    ->readOnly()
-                                                    ->afterStateUpdated(function (Closure $set, $state) {
-                                                        $set('slug', Position::generateUniqueSlug($state));
-                                                    })
-                                                    ->maxLength(255),
-                                                Forms\Components\Toggle::make('is_active')
-                                                    ->default(true)
-                                                    ->required(),
-                                            ])->columns(2),
-                                    ])
-                                    ->createOptionUsing(function ($data) {
-                                        return Position::create([
-                                            'name' => $data['name'],
-                                            'slug' => $data['slug'],
-                                            'is_active' => $data['is_active'],
-                                        ]);
-                                    }),
-                                Forms\Components\Select::make('division_id')
-                                    ->label('Division')
-                                    ->required()
-                                    ->options(Division::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                                    ->searchable()
-                                    ->createOptionForm([
-                                        Forms\Components\Section::make()
-                                            ->schema([
-                                                Forms\Components\TextInput::make('name')
-                                                    ->afterStateUpdated(function (Set $set, $state) {
-                                                        $set('slug', Division::generateUniqueSlug($state));
-                                                    })
-                                                    ->required()
-                                                    ->live(onBlur: true)
-                                                    ->maxLength(255),
-                                                Forms\Components\TextInput::make('slug')
-                                                    ->required()
-                                                    ->readOnly()
-                                                    ->afterStateUpdated(function (Closure $set, $state) {
-                                                        $set('slug', Division::generateUniqueSlug($state));
-                                                    })
-                                                    ->maxLength(255),
-                                                Forms\Components\Toggle::make('is_active')
-                                                    ->default(true)
-                                                    ->required(),
-                                            ])->columns(2),
-                                    ])
-                                    ->createOptionUsing(function ($data) {
-                                        return Position::create([
-                                            'name' => $data['name'],
-                                            'slug' => $data['slug'],
-                                            'is_active' => $data['is_active'],
-                                        ]);
-                                    }),
-                                Forms\Components\Select::make('status_karyawan')
-                                    ->required()
-                                    ->options([
-                                        'tetap' => 'Tetap',
-                                        'kontrak' => 'Kontrak',
-                                        'magang' => 'Magang',
-                                        'harian lepas' => 'Harian Lepas',
-                                    ])
-                                    ->searchable()
-                                    ->reactive(),
-                                Forms\Components\TextInput::make('cuti')
-                                    ->label('Sisa Cuti')
-                                    ->integer()
-                                    ->default(0)
-                                    ->maxLength(255)
-                                    ->minValue(0)
-                                    ->required()
-                                    ->visibleOn('edit'),
-                                Forms\Components\Select::make('roles')
-                                    ->relationship('roles', 'name', fn(Builder $query) => $query->where('id', '>', 1)->orWhere('name', '!=', 'super_admin')->orderBy('name', 'asc'))
-                                    ->required()
-                                    ->multiple()
-                                    ->preload()
-                                    ->searchable(),
-                                Forms\Components\DatePicker::make('tgl_pengangkatan')
-                                    ->visible(fn(Get $get) => $get('status_karyawan') === 'tetap'),
-                            ])->columns(3),
                         Forms\Components\Fieldset::make('Skema Approve')
                             ->schema([
                                 Forms\Components\Select::make('user_approve_id')
@@ -198,7 +213,7 @@ class UserResource extends Resource
                                     )
                                     ->getOptionLabelFromRecordUsing(fn(Model $record) => "{$record->first_name} {$record->last_name}")
                                     ->searchable(['first_name', 'last_name'])
-                                    ->helperText('Jika tidak ada user approve, biarkan kosong')
+                                    ->helperText('Jika tidak ada user approve satu, biarkan kosong')
                                     ->preload(),
                                 Forms\Components\Select::make('user_approve_dua_id')
                                     ->label('User Approve Dua')
