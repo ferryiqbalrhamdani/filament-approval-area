@@ -23,6 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // })->everySecond();
         $schedule->command('app:update-leave-balance')
             ->evenInMaintenanceMode()
-            ->everyMinute();
+            ->dailyAt('17:00');
     })
     ->create();
