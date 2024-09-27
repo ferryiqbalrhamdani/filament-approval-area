@@ -178,6 +178,8 @@ class UserResource extends Resource
                                 'kontrak' => 'Kontrak',
                                 'magang' => 'Magang',
                                 'harian lepas' => 'Harian Lepas',
+                                'keluar' => 'Keluar',
+                                'pensiun' => 'Pensiun',
                             ])
                             ->searchable()
                             ->reactive(),
@@ -197,6 +199,12 @@ class UserResource extends Resource
                             ->multiple()
                             ->preload()
                             ->searchable(),
+                        Forms\Components\Toggle::make('status')
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->default(true)
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\DatePicker::make('tgl_pengangkatan')
                             ->inlineLabel()
                             ->visible(fn(Get $get) => $get('status_karyawan') === 'tetap'),
@@ -291,14 +299,14 @@ class UserResource extends Resource
                     ->label('JK')
                     ->sortable()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('status_karyawan')
+                    ->sortable()
+                    ->badge()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('roles.name')
                     ->badge()
                     ->color('gray')
                     ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('status_karyawan')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

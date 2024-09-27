@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class CutiKhusus extends Model
 {
@@ -21,11 +22,17 @@ class CutiKhusus extends Model
         'keterangan_cuti',
     ];
 
+
+
     public static function boot()
     {
         parent::boot();
 
         static::deleting(function ($cutiKhusus) {
+            if ($cutiKhusus->photo) {
+                // Hapus file dari storage jika ada photo
+                Storage::disk('public')->delete($cutiKhusus->photo);
+            }
             $cutiKhusus->izinCutiApprove()->delete();
         });
     }

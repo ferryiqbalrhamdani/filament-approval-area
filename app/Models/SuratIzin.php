@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class SuratIzin extends Model
 {
@@ -25,6 +26,18 @@ class SuratIzin extends Model
         'company_id',
         'status_izin',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($suratIzin) {
+            if ($suratIzin->photo) {
+                // Hapus file dari storage jika ada photo
+                Storage::disk('public')->delete($suratIzin->photo);
+            }
+        });
+    }
 
     public function user()
     {

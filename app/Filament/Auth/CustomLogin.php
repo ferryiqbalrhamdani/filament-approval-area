@@ -2,12 +2,17 @@
 
 namespace App\Filament\Auth;
 
+use Filament\Facades\Filament;
 use Filament\Pages\Auth\Login;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Blade;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Validation\ValidationException;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse;
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 
 class CustomLogin extends Login
 {
@@ -60,6 +65,50 @@ class CustomLogin extends Login
             'password' => $data['password'],
         ];
     }
+
+    public function authenticate(): ?LoginResponse
+    {
+        try {
+            $this->rateLimit(5);
+        } catch (TooManyRequestsException $exception) {
+            Notification::make()
+                ->title(__('Too many login attempts. Please try again in :seconds seconds.', ['seconds' => $exception->secondsUntilAvailable]))
+                ->danger()
+                ->send();
+            return null;
+        }
+
+        $data = $this->form->getState();
+
+        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+            $this->throwFailureValidationException();
+        }
+
+        $user = Filament::auth()->user();
+
+        // Check if the user's status is inactive (false)
+        if (! $user->status) { // Assuming 'status' is the field in the user model
+            Filament::auth()->logout();
+
+            Notification::make()
+                ->title(__('Akun Dibekukan'))
+                ->body(__('Akun anda telah dibekukan. Silakan hubungi HRD.'))
+                ->danger()
+                ->send();
+
+            return null;
+        }
+
+        if (($user instanceof FilamentUser) && (! $user->canAccessPanel(Filament::getCurrentPanel()))) {
+            Filament::auth()->logout();
+            $this->throwFailureValidationException();
+        }
+
+        session()->regenerate();
+
+        return app(LoginResponse::class);
+    }
+
 
     protected function throwFailureValidationException(): never
     {
