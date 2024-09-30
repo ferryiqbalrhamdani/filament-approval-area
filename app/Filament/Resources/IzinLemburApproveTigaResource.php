@@ -7,7 +7,6 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
-use App\Models\TarifLembur;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
@@ -15,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\IzinLemburApproveTiga;
 use Filament\Support\Enums\Alignment;
 use Filament\Tables\Columns\ViewColumn;
+use App\Filament\Format\NumberingFormat;
 use Filament\Infolists\Components\Group;
 use Filament\Notifications\Notification;
 use pxlrbt\FilamentExcel\Columns\Column;
@@ -26,7 +26,6 @@ use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\Collection;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Filament\Tables\Columns\Summarizers\Count;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use App\Filament\Resources\IzinLemburApproveTigaResource\Pages;
@@ -416,16 +415,16 @@ class IzinLemburApproveTigaResource extends Resource
                                         ->heading('Lama Lembur (Jam)'),
                                     Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.tarif_lembur_perjam')
                                         ->heading('Upah Perjam')
-                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                        ->format(NumberingFormat::FORMAT_CURRENCY_IDR),
                                     Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.uang_makan')
                                         ->heading('Uang Makan')
-                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                        ->format(NumberingFormat::FORMAT_CURRENCY_IDR),
                                     Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.tarifLembur.tarif_lumsum')
                                         ->heading('Uang Lumsum')
-                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                        ->format(NumberingFormat::FORMAT_CURRENCY_IDR),
                                     Column::make('izinLemburApproveDua.izinLemburApprove.izinLembur.total')
                                         ->heading('Total')
-                                        ->format(NumberFormat::FORMAT_CURRENCY_IDR),
+                                        ->format(NumberingFormat::FORMAT_CURRENCY_IDR),
                                     Column::make('status')
                                         ->heading('Status')
                                         ->formatStateUsing(fn($state) => $state === 0 ? 'Diproses' : ($state === 1 ? 'Disetujui' : 'Ditolak')),
