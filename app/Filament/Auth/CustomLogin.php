@@ -72,7 +72,7 @@ class CustomLogin extends Login
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
             Notification::make()
-                ->title(__('Too many login attempts. Please try again in :seconds seconds.', ['seconds' => $exception->secondsUntilAvailable]))
+                ->title(__('Terlalu banyak percobaan login. Silakan coba lagi dalam :seconds detik.', ['seconds' => $exception->secondsUntilAvailable]))
                 ->danger()
                 ->send();
             return null;
@@ -88,6 +88,16 @@ class CustomLogin extends Login
 
         // Check if the user's status is inactive (false)
         if (! $user->status) { // Assuming 'status' is the field in the user model
+            try {
+                $this->rateLimit(5);
+            } catch (TooManyRequestsException $exception) {
+                Notification::make()
+                    ->title(__('Terlalu banyak percobaan login. Silakan coba lagi dalam :seconds detik.', ['seconds' => $exception->secondsUntilAvailable]))
+                    ->danger()
+                    ->send();
+                return null;
+            }
+
             Filament::auth()->logout();
 
             Notification::make()
