@@ -18,9 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule) {
-        // $schedule->call(function () {
-        //     info('mantap');
-        // })->everySecond();
         $schedule->command('app:update-leave-balance')
             ->evenInMaintenanceMode()
             ->dailyAt('17:00');
