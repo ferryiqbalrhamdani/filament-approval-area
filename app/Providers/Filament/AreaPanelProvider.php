@@ -75,7 +75,7 @@ class AreaPanelProvider extends PanelProvider
                     ->shouldShowDeleteAccountForm(false),
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 GlobalSearchModalPlugin::make(),
-                // \Hasnayeen\Themes\ThemesPlugin::make(),
+                \Hasnayeen\Themes\ThemesPlugin::make(),
             ]);
     }
 }
