@@ -2,14 +2,20 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\User;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
 class StatsOverview extends BaseWidget
 {
+    use HasWidgetShield;
+
+    protected static ?int $sort = 1;
+
+
     protected function getStats(): array
     {
         $user = Auth::user();
