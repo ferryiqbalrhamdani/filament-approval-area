@@ -30,6 +30,7 @@ class User extends Authenticatable
         'jk',
         'status_karyawan',
         'cuti',
+        'cuti_sebelumnya',
         'user_approve_id',
         'user_approve_dua_id',
         'tgl_pengangkatan',

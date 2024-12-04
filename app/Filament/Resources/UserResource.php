@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use Closure;
+use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
@@ -184,14 +185,13 @@ class UserResource extends Resource
                             ->searchable()
                             ->reactive(),
                         Forms\Components\TextInput::make('cuti')
-                            ->label('Sisa Cuti')
+                            ->label(fn() => 'Sisa Cuti (' . Carbon::now()->year - 1 . ')')
                             ->inlineLabel()
                             ->integer()
                             ->default(0)
-                            ->maxLength(255)
+                            ->maxValue(6)
                             ->minValue(0)
-                            ->required()
-                            ->visibleOn('edit'),
+                            ->required(),
                         Forms\Components\Select::make('roles')
                             ->relationship('roles', 'name', fn(Builder $query) => $query->where('id', '>', 1)->orWhere('name', '!=', 'super_admin')->orderBy('name', 'asc'))
                             ->required()
@@ -199,6 +199,14 @@ class UserResource extends Resource
                             ->multiple()
                             ->preload()
                             ->searchable(),
+                        Forms\Components\TextInput::make('cuti_sebelumnya')
+                            ->label(fn() => 'Sisa Cuti (' . Carbon::now()->year - 1 . ')')
+                            ->inlineLabel()
+                            ->integer()
+                            ->default(0)
+                            ->maxValue(6)
+                            ->minValue(0)
+                            ->required(),
                         Forms\Components\Toggle::make('status')
                             ->onColor('success')
                             ->offColor('danger')

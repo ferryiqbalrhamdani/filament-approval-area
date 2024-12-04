@@ -20,6 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('app:update-leave-balance')
             ->evenInMaintenanceMode()
-            ->dailyAt('17:00');
+            ->dailyAt('01:00');
     })
     ->create();

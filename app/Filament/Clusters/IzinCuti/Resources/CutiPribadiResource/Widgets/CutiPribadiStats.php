@@ -12,7 +12,7 @@ class CutiPribadiStats extends BaseWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Sisa Cuti', Auth::user()->cuti),
+            Stat::make('Sisa Cuti',  Auth::user()->cuti + Auth::user()->cuti_sebelumnya),
         ];
     }
 }

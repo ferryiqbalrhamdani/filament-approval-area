@@ -27,38 +27,36 @@ class UpdateLeaveBalance extends Command
      */
     public function handle()
     {
-        $users = User::where('status_karyawan', 'tetap')->get();
+        $users = User::whereHas('roles', function ($query) {
+            $query->where('name', 'izin_cuti_pribadi');
+        })->get();
+
+        $today = Carbon::today();
 
         foreach ($users as $user) {
-            $joinDate = Carbon::parse($user->tgl_pengangkatan); // Tanggal pengangkatan
-            $today = Carbon::today();
-
-            if ($joinDate) {
-                // 1. Tambah cuti setiap tahun pada hari pengangkatan
-                if ($today->isSameDay($joinDate)) {
-                    if ($user->cuti <= 6) {
-                        $user->cuti += 6;
-                    }
-                }
-
-                // 2. Cek reset cuti setiap 1 tahun 6 bulan dari pengangkatan dan seterusnya
-                $resetDate = $joinDate->copy()->addMonths(18); // Tanggal pertama reset 1 tahun 6 bulan setelah pengangkatan
-
-                // Loop untuk cek apakah reset berlaku setiap 18 bulan setelah tanggal pengangkatan
-                while ($resetDate->lessThanOrEqualTo($today)) {
-                    if ($today->isSameDay($resetDate)) {
-                        // Reset jika cuti lebih dari 6
-                        if ($user->cuti > 6) {
-                            $user->cuti = 6;
-                        }
-                    }
-                    // Tambah 18 bulan untuk reset berikutnya
-                    $resetDate->addMonths(18);
-                }
-
-                // Simpan perubahan cuti
-                $user->save();
+            // 1. Tambah 6 hari cuti pada awal tahun (1 Januari) dengan maksimum 12 hari
+            if ($today->isSameDay(Carbon::create($today->year, 1, 1))) {
+                $user->cuti_sebelumnya = $user->cuti;
+                $user->cuti = 6;
             }
+
+            // 2. Reset cuti pada tanggal 1 Juli, 7, 1
+            if ($today->isSameDay(Carbon::create($today->year, 7, 1))) {
+                $totalCuti = $user->cuti_sebelumnya + $user->cuti;
+
+                // Menghitung cuti berdasarkan penggunaan dari Januari hingga Juli
+                if ($totalCuti <= 6) {
+                    $user->cuti_sebelumnya = 0;
+                    $user->cuti = max($totalCuti, 0);
+                } else {
+                    $usedCuti = $totalCuti - $user->cuti; // Misalnya cuti yang sudah dipakai
+                    $user->cuti = max($totalCuti - $usedCuti, 0); // Update `cuti`
+                    $user->cuti_sebelumnya = 0;
+                }
+            }
+
+            // Simpan perubahan
+            $user->save();
         }
     }
 }
