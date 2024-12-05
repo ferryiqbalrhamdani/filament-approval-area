@@ -184,7 +184,7 @@ class UserResource extends Resource
                             ])
                             ->searchable()
                             ->reactive(),
-                        Forms\Components\TextInput::make('cuti')
+                        Forms\Components\TextInput::make('cuti_sebelumnya')
                             ->label(fn() => 'Sisa Cuti (' . Carbon::now()->year - 1 . ')')
                             ->inlineLabel()
                             ->integer()
@@ -199,8 +199,8 @@ class UserResource extends Resource
                             ->multiple()
                             ->preload()
                             ->searchable(),
-                        Forms\Components\TextInput::make('cuti_sebelumnya')
-                            ->label(fn() => 'Sisa Cuti (' . Carbon::now()->year - 1 . ')')
+                        Forms\Components\TextInput::make('cuti')
+                            ->label(fn() => 'Sisa Cuti (' . Carbon::now()->year . ')')
                             ->inlineLabel()
                             ->integer()
                             ->default(0)
